@@ -1,0 +1,5 @@
+{
+  "name": "Grocery POS System",
+  "description": "A full-stack grocery store management system with POS, inventory, customers, vendors, and invoice printing.",
+  "requestFramePermissions": []
+}

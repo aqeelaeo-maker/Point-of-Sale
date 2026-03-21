@@ -1,0 +1,200 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: user UID
+    // Fields:
+    //   - username: string (required)
+    //   - email: string (required)
+    //   - role: string (required, 'admin' or 'user')
+    //
+    // Collection: products
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - barcode: string (optional)
+    //   - unit: string (required)
+    //   - cost_price: number (required)
+    //   - price_per_unit: number (required)
+    //   - stock: number (required)
+    //   - batch_number: string (optional)
+    //   - expiry_date: string (optional)
+    //
+    // Collection: customers
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - phone: string (optional)
+    //   - loan_balance: number (required)
+    //
+    // Collection: vendors
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - phone: string (optional)
+    //   - balance: number (required)
+    //
+    // Collection: sales
+    // Document ID: auto-generated
+    // Fields:
+    //   - customer_id: string (optional)
+    //   - total_amount: number (required)
+    //   - paid_amount: number (required)
+    //   - date: string (required)
+    //
+    // Collection: sales/{saleId}/items
+    // Document ID: auto-generated
+    // Fields:
+    //   - product_id: string (required)
+    //   - quantity: number (required)
+    //   - cost_price: number (required)
+    //   - unit_price: number (required)
+    //   - total_price: number (required)
+    //
+    // Collection: settings
+    // Document ID: setting key
+    // Fields:
+    //   - value: string (required)
+    //
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (
+          (request.auth.token.email == "aqeelaeo@gmail.com" && request.auth.token.email_verified == true) ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        );
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['id', 'username', 'email', 'role']) &&
+             data.username is string && data.username.size() > 0 && data.username.size() < 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() < 100 &&
+             data.role in ['admin', 'user'];
+    }
+
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields(['name', 'barcode', 'unit', 'cost_price', 'price_per_unit', 'stock', 'batch_number', 'expiry_date']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.unit is string && data.unit.size() > 0 && data.unit.size() < 50 &&
+             data.cost_price is number && data.cost_price >= 0 &&
+             data.price_per_unit is number && data.price_per_unit >= 0 &&
+             data.stock is number &&
+             (!('barcode' in data) || (data.barcode is string && data.barcode.size() < 100)) &&
+             (!('batch_number' in data) || (data.batch_number is string && data.batch_number.size() < 100)) &&
+             (!('expiry_date' in data) || (data.expiry_date is string && data.expiry_date.size() < 100));
+    }
+
+    function isValidCustomer(data) {
+      return hasOnlyAllowedFields(['name', 'phone', 'loan_balance']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 50)) &&
+             data.loan_balance is number;
+    }
+
+    function isValidVendor(data) {
+      return hasOnlyAllowedFields(['name', 'phone', 'balance']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 50)) &&
+             data.balance is number;
+    }
+
+    function isValidSale(data) {
+      return hasOnlyAllowedFields(['customer_id', 'total_amount', 'paid_amount', 'date']) &&
+             (!('customer_id' in data) || data.customer_id == null || (data.customer_id is string && data.customer_id.size() < 100)) &&
+             data.total_amount is number && data.total_amount >= 0 &&
+             data.paid_amount is number && data.paid_amount >= 0 &&
+             data.date is string && data.date.size() > 0 && data.date.size() < 50;
+    }
+
+    function isValidSaleItem(data) {
+      return hasOnlyAllowedFields(['product_id', 'quantity', 'cost_price', 'unit_price', 'total_price']) &&
+             data.product_id is string && data.product_id.size() > 0 && data.product_id.size() < 100 &&
+             data.quantity is number && data.quantity > 0 &&
+             data.cost_price is number && data.cost_price >= 0 &&
+             data.unit_price is number && data.unit_price >= 0 &&
+             data.total_price is number && data.total_price >= 0;
+    }
+
+    function isValidSetting(data) {
+      return hasOnlyAllowedFields(['value']) &&
+             (data.value is string && data.value.size() < 2000000); // Allow up to 2MB for base64 images
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && ((isOwner(userId) && request.resource.data.role == 'user') || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidProduct(request.resource.data);
+      allow update: if isAdmin() && isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidCustomer(request.resource.data);
+      allow update: if isAuthenticated() && isValidCustomer(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidVendor(request.resource.data);
+      allow update: if isAuthenticated() && isValidVendor(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /sales/{saleId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidSale(request.resource.data);
+      allow update: if isAdmin() && isValidSale(request.resource.data);
+      allow delete: if isAdmin();
+      
+      match /items/{itemId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isValidSaleItem(request.resource.data);
+        allow update: if isAdmin() && isValidSaleItem(request.resource.data);
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidSetting(request.resource.data);
+      allow update: if isAdmin() && isValidSetting(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}
