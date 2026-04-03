@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Product, Customer } from '../types';
 import { Search, Plus, Minus, Trash2, Printer, ShoppingCart, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -30,10 +30,13 @@ export default function POS() {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.barcode?.includes(search)
-  );
+  const filteredProducts = useMemo(() => {
+    const lowerSearch = search.toLowerCase();
+    return products.filter(p => 
+      p.name.toLowerCase().includes(lowerSearch) || 
+      p.barcode?.includes(lowerSearch)
+    );
+  }, [products, search]);
 
   const addToCart = (product: Product) => {
     setCart(prev => {

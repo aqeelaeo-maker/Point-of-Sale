@@ -150,6 +150,11 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
+    match /allowed_emails/{emailId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidUser(request.resource.data) && isOwner(userId);

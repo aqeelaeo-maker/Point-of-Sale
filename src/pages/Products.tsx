@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Product } from '../types';
 import { Plus, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -11,7 +11,15 @@ export default function Products() {
     name: '', barcode: '', unit: 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: ''
   });
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState('');
+
+  const filteredProducts = useMemo(() => {
+    const lowerSearch = search.toLowerCase();
+    return products.filter(p => 
+      p.name.toLowerCase().includes(lowerSearch) || 
+      p.barcode?.includes(lowerSearch)
+    );
+  }, [products, search]);
   const [currency, setCurrency] = useState('USD');
 
   const fetchProducts = () => {
@@ -73,6 +81,13 @@ export default function Products() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Products Inventory</h1>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="w-full sm:w-64 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
           <input 
             type="file" 
             accept=".xlsx, .xls, .csv" 
@@ -156,7 +171,7 @@ export default function Products() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {products.map(product => (
+            {filteredProducts.map(product => (
               <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                 <td className="p-4 font-medium text-slate-900">{product.name}</td>
                 <td className="p-4 text-slate-500 font-mono text-sm">{product.barcode || '-'}</td>
@@ -167,9 +182,9 @@ export default function Products() {
                 <td className="p-4 text-slate-500">{product.expiry_date || '-'}</td>
               </tr>
             ))}
-            {products.length === 0 && (
+            {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-slate-500">No products found. Add some to get started.</td>
+                <td colSpan={7} className="p-8 text-center text-slate-500">No products found.</td>
               </tr>
             )}
           </tbody>

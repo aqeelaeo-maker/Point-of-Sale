@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { checkEmailAllowed } from '../lib/api';
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [error, setError] = useState('');
@@ -17,6 +18,14 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
+      if (!user.email) throw new Error('No email found in Google account.');
+
+      const isAllowed = await checkEmailAllowed(user.email);
+      if (!isAllowed) {
+        await signOut(auth);
+        throw new Error('Your email is not authorized to create a store.');
+      }
+
       // Check if user exists in our db, if not create them
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);

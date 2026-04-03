@@ -1,10 +1,32 @@
 import { db, auth } from './firebase';
-import { collection, getDocs, getDoc, addDoc, setDoc, doc, query, orderBy, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, getDoc, addDoc, setDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'firebase/firestore';
 
 const getTenantPath = (path: string) => {
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error('User not authenticated');
   return `stores/${uid}/${path}`;
+};
+
+// --- Allowed Emails (Admin Only) ---
+export const getAllowedEmails = async () => {
+  const snapshot = await getDocs(collection(db, 'allowed_emails'));
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addAllowedEmail = async (email: string) => {
+  await setDoc(doc(db, 'allowed_emails', email), { email, addedAt: new Date().toISOString() });
+  return { success: true };
+};
+
+export const removeAllowedEmail = async (email: string) => {
+  await deleteDoc(doc(db, 'allowed_emails', email));
+  return { success: true };
+};
+
+export const checkEmailAllowed = async (email: string) => {
+  if (email === 'aqeelaeo@gmail.com') return true;
+  const docRef = await getDoc(doc(db, 'allowed_emails', email));
+  return docRef.exists();
 };
 
 // --- Products ---

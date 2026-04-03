@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { ShoppingCart, Users, Truck, Package, Settings as SettingsIcon, LayoutDashboard, History, Menu, X, LogOut } from 'lucide-react';
+import { ShoppingCart, Users, Truck, Package, Settings as SettingsIcon, LayoutDashboard, History, Menu, X, LogOut, Shield } from 'lucide-react';
 import { cn } from './lib/utils';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './lib/firebase';
@@ -16,10 +16,11 @@ import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
 import SalesHistory from './pages/SalesHistory';
 import Login from './pages/Login';
+import Admin from './pages/Admin';
 
 import { getSettings } from './lib/api';
 
-function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo }: { isOpen: boolean; setIsOpen: (v: boolean) => void; onLogout: () => void; storeName: string; logo: string }) {
+function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo, isSuperAdmin }: { isOpen: boolean; setIsOpen: (v: boolean) => void; onLogout: () => void; storeName: string; logo: string; isSuperAdmin: boolean }) {
   const location = useLocation();
   
   const links = [
@@ -31,6 +32,10 @@ function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo }: { isOpen: boo
     { name: 'Vendors', path: '/vendors', icon: Truck },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
   ];
+
+  if (isSuperAdmin) {
+    links.push({ name: 'Super Admin', path: '/admin', icon: Shield });
+  }
 
   return (
     <>
@@ -98,7 +103,7 @@ function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo }: { isOpen: boo
   );
 }
 
-function Layout({ children, onLogout }: { children: React.ReactNode; onLogout: () => void }) {
+function Layout({ children, onLogout, isSuperAdmin }: { children: React.ReactNode; onLogout: () => void; isSuperAdmin: boolean }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [storeName, setStoreName] = useState('GroceryOS');
   const [logo, setLogo] = useState('');
@@ -112,7 +117,7 @@ function Layout({ children, onLogout }: { children: React.ReactNode; onLogout: (
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} onLogout={onLogout} storeName={storeName} logo={logo} />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} onLogout={onLogout} storeName={storeName} logo={logo} isSuperAdmin={isSuperAdmin} />
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center gap-4 z-10">
@@ -167,17 +172,20 @@ export default function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  const isSuperAdmin = user.email === 'aqeelaeo@gmail.com';
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout onLogout={handleLogout}><Dashboard /></Layout>} />
-        <Route path="/pos" element={<Layout onLogout={handleLogout}><POS /></Layout>} />
-        <Route path="/sales" element={<Layout onLogout={handleLogout}><SalesHistory /></Layout>} />
-        <Route path="/products" element={<Layout onLogout={handleLogout}><Products /></Layout>} />
-        <Route path="/customers" element={<Layout onLogout={handleLogout}><Customers /></Layout>} />
-        <Route path="/vendors" element={<Layout onLogout={handleLogout}><Vendors /></Layout>} />
-        <Route path="/settings" element={<Layout onLogout={handleLogout}><Settings /></Layout>} />
+        <Route path="/" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Dashboard /></Layout>} />
+        <Route path="/pos" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><POS /></Layout>} />
+        <Route path="/sales" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><SalesHistory /></Layout>} />
+        <Route path="/products" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Products /></Layout>} />
+        <Route path="/customers" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Customers /></Layout>} />
+        <Route path="/vendors" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Vendors /></Layout>} />
+        <Route path="/settings" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Settings /></Layout>} />
         <Route path="/invoice/:id" element={<Invoice />} />
+        {isSuperAdmin && <Route path="/admin" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Admin /></Layout>} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
