@@ -152,51 +152,55 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidUser(request.resource.data) && ((isOwner(userId) && request.resource.data.role == 'user') || isAdmin());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && isOwner(userId);
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && isOwner(userId);
       allow delete: if isAdmin();
     }
 
-    match /products/{productId} {
-      allow read: if isAuthenticated();
-      allow create: if isAdmin() && isValidProduct(request.resource.data);
-      allow update: if isAdmin() && isValidProduct(request.resource.data);
-      allow delete: if isAdmin();
-    }
-
-    match /customers/{customerId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidCustomer(request.resource.data);
-      allow update: if isAuthenticated() && isValidCustomer(request.resource.data);
-      allow delete: if isAdmin();
-    }
-
-    match /vendors/{vendorId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidVendor(request.resource.data);
-      allow update: if isAuthenticated() && isValidVendor(request.resource.data);
-      allow delete: if isAdmin();
-    }
-
-    match /sales/{saleId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidSale(request.resource.data);
-      allow update: if isAdmin() && isValidSale(request.resource.data);
-      allow delete: if isAdmin();
+    match /stores/{storeId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == storeId;
       
-      match /items/{itemId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated() && isValidSaleItem(request.resource.data);
-        allow update: if isAdmin() && isValidSaleItem(request.resource.data);
-        allow delete: if isAdmin();
+      match /products/{productId} {
+        allow read: if isAuthenticated() && request.auth.uid == storeId;
+        allow create: if isAuthenticated() && request.auth.uid == storeId && isValidProduct(request.resource.data);
+        allow update: if isAuthenticated() && request.auth.uid == storeId && isValidProduct(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == storeId;
       }
-    }
 
-    match /settings/{settingId} {
-      allow read: if isAuthenticated();
-      allow create: if isAdmin() && isValidSetting(request.resource.data);
-      allow update: if isAdmin() && isValidSetting(request.resource.data);
-      allow delete: if isAdmin();
+      match /customers/{customerId} {
+        allow read: if isAuthenticated() && request.auth.uid == storeId;
+        allow create: if isAuthenticated() && request.auth.uid == storeId && isValidCustomer(request.resource.data);
+        allow update: if isAuthenticated() && request.auth.uid == storeId && isValidCustomer(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == storeId;
+      }
+
+      match /vendors/{vendorId} {
+        allow read: if isAuthenticated() && request.auth.uid == storeId;
+        allow create: if isAuthenticated() && request.auth.uid == storeId && isValidVendor(request.resource.data);
+        allow update: if isAuthenticated() && request.auth.uid == storeId && isValidVendor(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == storeId;
+      }
+
+      match /sales/{saleId} {
+        allow read: if isAuthenticated() && request.auth.uid == storeId;
+        allow create: if isAuthenticated() && request.auth.uid == storeId && isValidSale(request.resource.data);
+        allow update: if isAuthenticated() && request.auth.uid == storeId && isValidSale(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == storeId;
+        
+        match /items/{itemId} {
+          allow read: if isAuthenticated() && request.auth.uid == storeId;
+          allow create: if isAuthenticated() && request.auth.uid == storeId && isValidSaleItem(request.resource.data);
+          allow update: if isAuthenticated() && request.auth.uid == storeId && isValidSaleItem(request.resource.data);
+          allow delete: if isAuthenticated() && request.auth.uid == storeId;
+        }
+      }
+
+      match /settings/{settingId} {
+        allow read: if isAuthenticated() && request.auth.uid == storeId;
+        allow create: if isAuthenticated() && request.auth.uid == storeId && isValidSetting(request.resource.data);
+        allow update: if isAuthenticated() && request.auth.uid == storeId && isValidSetting(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == storeId;
+      }
     }
   }
 }

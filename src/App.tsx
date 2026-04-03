@@ -19,16 +19,8 @@ import Login from './pages/Login';
 
 import { getSettings } from './lib/api';
 
-function Sidebar({ isOpen, setIsOpen, onLogout }: { isOpen: boolean; setIsOpen: (v: boolean) => void; onLogout: () => void }) {
+function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo }: { isOpen: boolean; setIsOpen: (v: boolean) => void; onLogout: () => void; storeName: string; logo: string }) {
   const location = useLocation();
-  const [logo, setLogo] = React.useState('');
-
-  React.useEffect(() => {
-    getSettings()
-      .then(data => {
-        if (data.store_logo) setLogo(data.store_logo);
-      });
-  }, []);
   
   const links = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -60,9 +52,11 @@ function Sidebar({ isOpen, setIsOpen, onLogout }: { isOpen: boolean; setIsOpen: 
             {logo ? (
               <img src={logo} alt="Logo" className="w-10 h-10 rounded-lg object-cover bg-white" />
             ) : (
-              <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-xl">G</div>
+              <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-xl">
+                {storeName ? storeName.charAt(0).toUpperCase() : 'G'}
+              </div>
             )}
-            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">GroceryOS</h1>
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent truncate max-w-[150px]">{storeName || 'GroceryOS'}</h1>
           </div>
           <button onClick={() => setIsOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
             <X size={24} />
@@ -106,17 +100,26 @@ function Sidebar({ isOpen, setIsOpen, onLogout }: { isOpen: boolean; setIsOpen: 
 
 function Layout({ children, onLogout }: { children: React.ReactNode; onLogout: () => void }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [storeName, setStoreName] = useState('GroceryOS');
+  const [logo, setLogo] = useState('');
+
+  useEffect(() => {
+    getSettings().then(data => {
+      if (data.store_name) setStoreName(data.store_name);
+      if (data.store_logo) setLogo(data.store_logo);
+    }).catch(err => console.error(err));
+  }, []);
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} onLogout={onLogout} />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} onLogout={onLogout} storeName={storeName} logo={logo} />
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center gap-4 z-10">
           <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 hover:text-slate-900">
             <Menu size={24} />
           </button>
-          <h1 className="text-lg font-bold text-slate-900">GroceryOS</h1>
+          <h1 className="text-lg font-bold text-slate-900 truncate">{storeName || 'GroceryOS'}</h1>
         </div>
         <div className="flex-1 overflow-y-auto">
           {children}
