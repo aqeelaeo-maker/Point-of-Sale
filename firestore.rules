@@ -123,10 +123,12 @@ service cloud.firestore {
     }
 
     function isValidSale(data) {
-      return hasOnlyAllowedFields(['customer_id', 'total_amount', 'paid_amount', 'date']) &&
+      return hasOnlyAllowedFields(['customer_id', 'total_amount', 'paid_amount', 'previous_loan', 'total_due', 'date']) &&
              (!('customer_id' in data) || data.customer_id == null || (data.customer_id is string && data.customer_id.size() < 100)) &&
              data.total_amount is number && data.total_amount >= 0 &&
              data.paid_amount is number && data.paid_amount >= 0 &&
+             (!('previous_loan' in data) || data.previous_loan is number) &&
+             (!('total_due' in data) || data.total_due is number) &&
              data.date is string && data.date.size() > 0 && data.date.size() < 50;
     }
 

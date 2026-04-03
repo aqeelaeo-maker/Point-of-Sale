@@ -10,8 +10,8 @@ export default function POS() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cart, setCart] = useState<(Product & { quantity: number })[]>([]);
   const [search, setSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<number | null>(null);
-  const [paidAmount, setPaidAmount] = useState<number>(0);
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [paidAmountInput, setPaidAmountInput] = useState<string>('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currency, setCurrency] = useState('USD');
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ export default function POS() {
     });
   };
 
-  const updateQuantity = (id: number, delta: number) => {
+  const updateQuantity = (id: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
         const newQ = Math.max(0, item.quantity + delta);
@@ -56,14 +56,19 @@ export default function POS() {
   };
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0);
+  const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
+  const previousLoan = selectedCustomerData?.loan_balance || 0;
+  const totalDue = totalAmount + previousLoan;
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
 
+    const finalPaidAmount = paidAmountInput === '' ? totalDue : Number(paidAmountInput);
+
     const saleData = {
       customer_id: selectedCustomer,
       total_amount: totalAmount,
-      paid_amount: paidAmount,
+      paid_amount: finalPaidAmount,
       items: cart.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
@@ -77,7 +82,7 @@ export default function POS() {
       const data = await addSale(saleData);
       if (data.success) {
         setCart([]);
-        setPaidAmount(0);
+        setPaidAmountInput('');
         setSelectedCustomer(null);
         navigate(`/invoice/${data.saleId}`);
       }
@@ -166,7 +171,7 @@ export default function POS() {
           <select
             className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-medium text-slate-700 transition-all"
             value={selectedCustomer || ''}
-            onChange={e => setSelectedCustomer(e.target.value ? Number(e.target.value) : null)}
+            onChange={e => setSelectedCustomer(e.target.value || null)}
           >
             <option value="">Walk-in Customer</option>
             {customers.map(c => (
@@ -215,12 +220,18 @@ export default function POS() {
 
         <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-4">
           <div className="flex justify-between text-slate-600">
-            <span>Subtotal</span>
+            <span>Current Sale</span>
             <span>{formatCurrency(totalAmount)}</span>
           </div>
+          {selectedCustomerData && (
+            <div className="flex justify-between text-slate-600">
+              <span>Previous Loan</span>
+              <span className="text-red-500">{formatCurrency(previousLoan)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xl font-bold text-slate-900">
-            <span>Total</span>
-            <span>{formatCurrency(totalAmount)}</span>
+            <span>Total Due</span>
+            <span>{formatCurrency(totalDue)}</span>
           </div>
           
           <div className="pt-4 border-t border-slate-200">
@@ -229,9 +240,9 @@ export default function POS() {
               <input
                 type="number"
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                value={paidAmount || ''}
-                onChange={e => setPaidAmount(Number(e.target.value))}
-                placeholder={totalAmount.toFixed(2)}
+                value={paidAmountInput}
+                onChange={e => setPaidAmountInput(e.target.value)}
+                placeholder={`Exact amount: ${totalDue.toFixed(2)}`}
               />
             </div>
           </div>

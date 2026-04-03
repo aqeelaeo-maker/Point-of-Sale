@@ -75,10 +75,22 @@ export const addSale = async (saleData) => {
   
   // Create sale
   const saleRef = doc(collection(db, 'sales'));
+  let previousLoan = 0;
+
+  if (saleData.customer_id) {
+    const customerRef = doc(db, 'customers', saleData.customer_id);
+    const customerDoc = await getDoc(customerRef);
+    if (customerDoc.exists()) {
+      previousLoan = customerDoc.data().loan_balance || 0;
+    }
+  }
+
   batch.set(saleRef, {
     customer_id: saleData.customer_id,
     total_amount: saleData.total_amount,
     paid_amount: saleData.paid_amount,
+    previous_loan: previousLoan,
+    total_due: saleData.total_amount + previousLoan,
     date: new Date().toISOString()
   });
 
@@ -89,14 +101,10 @@ export const addSale = async (saleData) => {
   });
 
   // Update customer loan if applicable
-  if (saleData.customer_id && saleData.total_amount > saleData.paid_amount) {
+  if (saleData.customer_id) {
     const loanAmount = saleData.total_amount - saleData.paid_amount;
     const customerRef = doc(db, 'customers', saleData.customer_id);
-    const customerDoc = await getDoc(customerRef);
-    if (customerDoc.exists()) {
-      const currentLoan = customerDoc.data().loan_balance || 0;
-      batch.update(customerRef, { loan_balance: currentLoan + loanAmount });
-    }
+    batch.update(customerRef, { loan_balance: previousLoan + loanAmount });
   }
 
   await batch.commit();

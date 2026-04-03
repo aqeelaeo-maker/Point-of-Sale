@@ -1,5 +1,5 @@
 export type Product = {
-  id: number;
+  id: string;
   name: string;
   barcode: string;
   unit: 'kg' | 'liter' | 'piece';
@@ -11,21 +11,21 @@ export type Product = {
 };
 
 export type Customer = {
-  id: number;
+  id: string;
   name: string;
   phone: string;
   loan_balance: number;
 };
 
 export type Vendor = {
-  id: number;
+  id: string;
   name: string;
   phone: string;
   balance: number;
 };
 
 export type SaleItem = {
-  product_id: number;
+  product_id: string;
   quantity: number;
   cost_price: number;
   unit_price: number;
@@ -35,10 +35,12 @@ export type SaleItem = {
 };
 
 export type Sale = {
-  id?: number;
-  customer_id: number | null;
+  id?: string;
+  customer_id: string | null;
   total_amount: number;
   paid_amount: number;
+  previous_loan?: number;
+  total_due?: number;
   date?: string;
   items: SaleItem[];
   customer?: Customer;

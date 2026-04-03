@@ -128,21 +128,35 @@ export default function Invoice() {
         <div className="flex justify-end">
           <div className={`${printMode === 'a4' ? 'w-1/2' : 'w-full'}`}>
             <div className="flex justify-between py-2 text-slate-600">
-              <span>Subtotal:</span>
+              <span>Current Sale:</span>
               <span>{formatCurrency(sale.total_amount)}</span>
             </div>
+            {(sale.previous_loan || 0) > 0 && (
+              <div className="flex justify-between py-2 text-slate-600">
+                <span>Previous Loan:</span>
+                <span>{formatCurrency(sale.previous_loan || 0)}</span>
+              </div>
+            )}
             <div className="flex justify-between py-2 text-xl font-bold border-t border-slate-900">
-              <span>Total:</span>
-              <span>{formatCurrency(sale.total_amount)}</span>
+              <span>Total Due:</span>
+              <span>{formatCurrency(sale.total_due ?? sale.total_amount)}</span>
             </div>
             <div className="flex justify-between py-2 text-slate-600">
               <span>Paid Amount:</span>
               <span>{formatCurrency(sale.paid_amount)}</span>
             </div>
-            {sale.total_amount > sale.paid_amount && (
-              <div className="flex justify-between py-2 text-red-600 font-semibold">
-                <span>Due Amount:</span>
-                <span>{formatCurrency(sale.total_amount - sale.paid_amount)}</span>
+            
+            {sale.paid_amount > (sale.total_due ?? sale.total_amount) && (
+              <div className="flex justify-between py-2 text-emerald-600 font-semibold">
+                <span>Change:</span>
+                <span>{formatCurrency(sale.paid_amount - (sale.total_due ?? sale.total_amount))}</span>
+              </div>
+            )}
+            
+            {(sale.total_due ?? sale.total_amount) > sale.paid_amount && (
+              <div className="flex justify-between py-2 text-red-600 font-semibold border-t border-slate-200 mt-2">
+                <span>Remaining Loan:</span>
+                <span>{formatCurrency((sale.total_due ?? sale.total_amount) - sale.paid_amount)}</span>
               </div>
             )}
           </div>
