@@ -2,12 +2,15 @@ export type Product = {
   id: string;
   name: string;
   barcode: string;
-  unit: 'kg' | 'liter' | 'piece';
+  unit: string;
   cost_price: number;
   price_per_unit: number;
   stock: number;
   batch_number: string;
   expiry_date: string;
+  has_sub_unit?: boolean;
+  sub_unit?: string;
+  conversion_rate?: number;
 };
 
 export type Customer = {
@@ -32,6 +35,8 @@ export type SaleItem = {
   total_price: number;
   product_name?: string;
   unit?: string;
+  is_sub_unit?: boolean;
+  stock_deduction?: number;
 };
 
 export type Sale = {

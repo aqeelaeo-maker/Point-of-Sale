@@ -97,7 +97,7 @@ service cloud.firestore {
     }
 
     function isValidProduct(data) {
-      return hasOnlyAllowedFields(['name', 'barcode', 'unit', 'cost_price', 'price_per_unit', 'stock', 'batch_number', 'expiry_date']) &&
+      return hasOnlyAllowedFields(['name', 'barcode', 'unit', 'cost_price', 'price_per_unit', 'stock', 'batch_number', 'expiry_date', 'has_sub_unit', 'sub_unit', 'conversion_rate']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
              data.unit is string && data.unit.size() > 0 && data.unit.size() < 50 &&
              data.cost_price is number && data.cost_price >= 0 &&
@@ -105,7 +105,10 @@ service cloud.firestore {
              data.stock is number &&
              (!('barcode' in data) || (data.barcode is string && data.barcode.size() < 100)) &&
              (!('batch_number' in data) || (data.batch_number is string && data.batch_number.size() < 100)) &&
-             (!('expiry_date' in data) || (data.expiry_date is string && data.expiry_date.size() < 100));
+             (!('expiry_date' in data) || (data.expiry_date is string && data.expiry_date.size() < 100)) &&
+             (!('has_sub_unit' in data) || data.has_sub_unit is bool) &&
+             (!('sub_unit' in data) || (data.sub_unit is string && data.sub_unit.size() < 50)) &&
+             (!('conversion_rate' in data) || data.conversion_rate is number);
     }
 
     function isValidCustomer(data) {
@@ -133,12 +136,16 @@ service cloud.firestore {
     }
 
     function isValidSaleItem(data) {
-      return hasOnlyAllowedFields(['product_id', 'quantity', 'cost_price', 'unit_price', 'total_price']) &&
+      return hasOnlyAllowedFields(['product_id', 'quantity', 'cost_price', 'unit_price', 'total_price', 'product_name', 'unit', 'is_sub_unit', 'stock_deduction']) &&
              data.product_id is string && data.product_id.size() > 0 && data.product_id.size() < 100 &&
              data.quantity is number && data.quantity > 0 &&
              data.cost_price is number && data.cost_price >= 0 &&
              data.unit_price is number && data.unit_price >= 0 &&
-             data.total_price is number && data.total_price >= 0;
+             data.total_price is number && data.total_price >= 0 &&
+             (!('product_name' in data) || (data.product_name is string && data.product_name.size() < 200)) &&
+             (!('unit' in data) || (data.unit is string && data.unit.size() < 50)) &&
+             (!('is_sub_unit' in data) || data.is_sub_unit is bool) &&
+             (!('stock_deduction' in data) || data.stock_deduction is number);
     }
 
     function isValidSetting(data) {

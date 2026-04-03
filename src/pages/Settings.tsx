@@ -9,7 +9,8 @@ export default function Settings() {
     store_phone: '',
     store_logo: '',
     currency: 'USD',
-    language: 'en'
+    language: 'en',
+    units: 'piece, kg, liter'
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -23,7 +24,8 @@ export default function Settings() {
           store_phone: data.store_phone || '',
           store_logo: data.store_logo || '',
           currency: data.currency || 'USD',
-          language: data.language || 'en'
+          language: data.language || 'en',
+          units: data.units || 'piece, kg, liter'
         });
       });
   }, []);
@@ -127,6 +129,17 @@ export default function Settings() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Product Units (comma separated)</label>
+              <input 
+                type="text" 
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
+                value={settings.units} 
+                onChange={e => setSettings({...settings, units: e.target.value})} 
+                placeholder="e.g. piece, kg, liter, box, pack"
+              />
+              <p className="text-xs text-slate-500 mt-2">These units will be available when adding or editing products.</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Currency</label>
               <select 

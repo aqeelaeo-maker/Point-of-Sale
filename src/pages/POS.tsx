@@ -1,30 +1,68 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product, Customer } from '../types';
 import { Search, Plus, Minus, Trash2, Printer, ShoppingCart, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { getProducts, getCustomers, getSettings, addSale } from '../lib/api';
+import { getProducts, getCustomers, getSettings, addSale, getSaleById, updateSale } from '../lib/api';
 
 export default function POS() {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [cart, setCart] = useState<(Product & { quantity: number })[]>([]);
+  const [cart, setCart] = useState<(Product & { quantity: number, is_sub_unit: boolean, unit_price: number })[]>([]);
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
   const [paidAmountInput, setPaidAmountInput] = useState<string>('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currency, setCurrency] = useState('USD');
   const navigate = useNavigate();
+  const location = useLocation();
+  const editSaleId = new URLSearchParams(location.search).get('edit');
 
   useEffect(() => {
-    getProducts().then(setProducts);
-    getCustomers().then(setCustomers);
-    getSettings()
-      .then(settings => {
+    const loadData = async () => {
+      try {
+        const [prods, custs, settings] = await Promise.all([
+          getProducts(),
+          getCustomers(),
+          getSettings()
+        ]);
+        setProducts(prods);
+        setCustomers(custs);
         if (settings.currency) setCurrency(settings.currency);
-      })
-      .catch(console.error);
-  }, []);
+
+        if (editSaleId) {
+          const saleData = await getSaleById(editSaleId);
+          setSelectedCustomer(saleData.customer_id || null);
+          setPaidAmountInput(saleData.paid_amount.toString());
+          
+          // Reconstruct cart
+          const reconstructedCart = saleData.items.map((item: any) => {
+            const product = prods.find(p => p.id === item.product_id);
+            return {
+              id: item.product_id,
+              name: product ? product.name : 'Unknown Product',
+              barcode: product ? product.barcode : '',
+              unit: product ? product.unit : 'piece',
+              cost_price: item.cost_price,
+              price_per_unit: product ? product.price_per_unit : item.unit_price,
+              stock: product ? product.stock : 0,
+              has_sub_unit: product ? product.has_sub_unit : false,
+              sub_unit: product ? product.sub_unit : '',
+              conversion_rate: product ? product.conversion_rate : 1,
+              quantity: item.quantity,
+              is_sub_unit: item.is_sub_unit || false,
+              unit_price: item.unit_price
+            };
+          });
+          setCart(reconstructedCart);
+          setIsCartOpen(true);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadData();
+  }, [editSaleId]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
@@ -44,7 +82,7 @@ export default function POS() {
       if (existing) {
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1, is_sub_unit: false, unit_price: product.price_per_unit }];
     });
   };
 
@@ -58,7 +96,29 @@ export default function POS() {
     }).filter(item => item.quantity > 0));
   };
 
-  const totalAmount = cart.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0);
+  const toggleSubUnit = (id: string) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id && item.has_sub_unit) {
+        const newIsSubUnit = !item.is_sub_unit;
+        const newUnitPrice = newIsSubUnit 
+          ? item.price_per_unit / (item.conversion_rate || 1)
+          : item.price_per_unit;
+        return { ...item, is_sub_unit: newIsSubUnit, unit_price: newUnitPrice };
+      }
+      return item;
+    }));
+  };
+
+  const updateUnitPrice = (id: string, price: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        return { ...item, unit_price: price };
+      }
+      return item;
+    }));
+  };
+
+  const totalAmount = cart.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
   const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
   const previousLoan = selectedCustomerData?.loan_balance || 0;
   const totalDue = totalAmount + previousLoan;
@@ -74,15 +134,25 @@ export default function POS() {
       paid_amount: finalPaidAmount,
       items: cart.map(item => ({
         product_id: item.id,
+        product_name: item.name,
+        unit: item.is_sub_unit ? item.sub_unit : item.unit,
         quantity: item.quantity,
-        cost_price: item.cost_price,
-        unit_price: item.price_per_unit,
-        total_price: item.price_per_unit * item.quantity
+        cost_price: item.is_sub_unit ? (item.cost_price / (item.conversion_rate || 1)) : item.cost_price,
+        unit_price: item.unit_price,
+        total_price: item.unit_price * item.quantity,
+        is_sub_unit: item.is_sub_unit,
+        stock_deduction: item.is_sub_unit ? (item.quantity / (item.conversion_rate || 1)) : item.quantity
       }))
     };
 
     try {
-      const data = await addSale(saleData);
+      let data;
+      if (editSaleId) {
+        data = await updateSale(editSaleId, saleData);
+      } else {
+        data = await addSale(saleData);
+      }
+      
       if (data.success) {
         setCart([]);
         setPaidAmountInput('');
@@ -185,17 +255,46 @@ export default function POS() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {cart.map(item => (
-            <div key={item.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">{item.name}</div>
-                <div className="text-sm text-slate-500">{formatCurrency(item.price_per_unit)} / {item.unit}</div>
+            <div key={item.id} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100 gap-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="font-medium text-slate-900">{item.name}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      className="w-20 p-1 text-sm border border-slate-300 rounded focus:ring-emerald-500 focus:border-emerald-500"
+                      value={item.unit_price}
+                      onChange={e => updateUnitPrice(item.id, parseFloat(e.target.value) || 0)}
+                    />
+                    <span className="text-sm text-slate-500">/</span>
+                    {item.has_sub_unit ? (
+                      <select 
+                        className="text-sm border border-slate-300 rounded p-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                        value={item.is_sub_unit ? 'sub' : 'main'}
+                        onChange={() => toggleSubUnit(item.id)}
+                      >
+                        <option value="main">{item.unit}</option>
+                        <option value="sub">{item.sub_unit}</option>
+                      </select>
+                    ) : (
+                      <span className="text-sm text-slate-500">{item.unit}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="font-bold text-slate-900 text-right">
+                  {formatCurrency(item.unit_price * item.quantity)}
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between mt-1">
+                <div className="text-xs text-slate-500">
+                  Stock: {item.stock} {item.unit}
+                </div>
                 <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
                   <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-slate-100 rounded-md text-slate-600"><Minus size={16} /></button>
                   <input 
                     type="number" 
-                    step="0.01"
+                    step="any"
                     className="w-12 text-center font-medium text-sm bg-transparent border-none focus:ring-0 p-0"
                     value={item.quantity}
                     onChange={e => {
@@ -206,9 +305,6 @@ export default function POS() {
                     }}
                   />
                   <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-slate-100 rounded-md text-slate-600"><Plus size={16} /></button>
-                </div>
-                <div className="font-bold text-slate-900 w-16 text-right">
-                  {formatCurrency(item.price_per_unit * item.quantity)}
                 </div>
               </div>
             </div>
@@ -256,7 +352,7 @@ export default function POS() {
             className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
           >
             <Printer size={20} />
-            Checkout & Print
+            {editSaleId ? 'Update & Print' : 'Checkout & Print'}
           </button>
         </div>
       </div>

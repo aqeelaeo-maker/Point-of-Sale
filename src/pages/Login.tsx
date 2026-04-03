@@ -8,6 +8,7 @@ import { checkEmailAllowed } from '../lib/api';
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showContactAdmin, setShowContactAdmin] = useState(false);
 
   const handleGoogleLogin = async () => {
     setError('');
@@ -23,7 +24,8 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       const isAllowed = await checkEmailAllowed(user.email);
       if (!isAllowed) {
         await signOut(auth);
-        throw new Error('Your email is not authorized to create a store.');
+        setShowContactAdmin(true);
+        return;
       }
 
       // Check if user exists in our db, if not create them
@@ -64,20 +66,44 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
         </div>
 
         <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium text-center mb-6">
-              {error}
+          {showContactAdmin ? (
+            <div className="text-center">
+              <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm font-medium mb-6 border border-amber-200">
+                <p className="mb-2 text-base font-bold">Access Denied</p>
+                <p>Your email is not in the list of allowed users.</p>
+              </div>
+              <p className="text-slate-600 mb-4">Please contact the administrator to request access to GroceryOS.</p>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-left">
+                <p className="text-sm text-slate-500 mb-1">Admin Email:</p>
+                <p className="font-medium text-slate-900 mb-3">aqeelaeo@gmail.com</p>
+                <p className="text-sm text-slate-500 mb-1">Contact Number:</p>
+                <p className="font-medium text-slate-900">+1 (555) 123-4567</p>
+              </div>
+              <button
+                onClick={() => setShowContactAdmin(false)}
+                className="mt-6 w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors"
+              >
+                Back to Login
+              </button>
             </div>
+          ) : (
+            <>
+              {error && (
+                <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium text-center mb-6">
+                  {error}
+                </div>
+              )}
+              
+              <button
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="w-full bg-white border border-slate-300 text-slate-700 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-3"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                {loading ? 'Signing in...' : 'Sign in with Google'}
+              </button>
+            </>
           )}
-          
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full bg-white border border-slate-300 text-slate-700 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-3"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            {loading ? 'Signing in...' : 'Sign in with Google'}
-          </button>
         </div>
       </div>
     </div>

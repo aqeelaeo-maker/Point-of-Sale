@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, FileText } from 'lucide-react';
+import { Search, FileText, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { getSales, getSettings, getCustomers } from '../lib/api';
+import { getSales, getSettings, getCustomers, deleteSale } from '../lib/api';
 
 export default function SalesHistory() {
   const [sales, setSales] = useState<any[]>([]);
@@ -49,6 +49,13 @@ export default function SalesHistory() {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
   };
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this invoice? This will also revert the customer loan balance if applicable.')) {
+      await deleteSale(id);
+      fetchSales(search);
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6 md:mb-8">
@@ -89,12 +96,26 @@ export default function SalesHistory() {
                 <td className="p-4 text-right font-medium text-slate-900">{formatCurrency(sale.total_amount)}</td>
                 <td className="p-4 text-right text-emerald-600 font-medium">{formatCurrency(sale.paid_amount)}</td>
                 <td className="p-4 text-center">
-                  <button
-                    onClick={() => navigate(`/invoice/${sale.id}`)}
-                    className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    <FileText size={16} /> View Invoice
-                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => navigate(`/invoice/${sale.id}`)}
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <FileText size={16} /> View
+                    </button>
+                    <button
+                      onClick={() => navigate(`/pos?edit=${sale.id}`)}
+                      className="inline-flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-800 font-medium bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Edit2 size={16} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(sale.id)}
+                      className="text-sm text-red-600 hover:text-red-800 font-medium bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Sale } from '../types';
 import { format } from 'date-fns';
 import { Printer, ArrowLeft } from 'lucide-react';
-import { getSaleById, getSettings, getCustomers } from '../lib/api';
+import { getSaleById, getSettings, getCustomers, getProducts } from '../lib/api';
 
 export default function Invoice() {
   const { id } = useParams();
@@ -18,10 +18,28 @@ export default function Invoice() {
     
     const fetchData = async () => {
       try {
-        const saleData = await getSaleById(id);
-        const customers = await getCustomers();
+        const [saleData, customers, products] = await Promise.all([
+          getSaleById(id),
+          getCustomers(),
+          getProducts()
+        ]);
+        
         const customer = customers.find(c => c.id === saleData.customer_id);
-        setSale({ ...saleData, customer } as any);
+        
+        // Fallback for older sales that didn't store product_name and unit
+        const enrichedItems = saleData.items.map((item: any) => {
+          if (!item.product_name || !item.unit) {
+            const product = products.find(p => p.id === item.product_id);
+            return {
+              ...item,
+              product_name: item.product_name || (product ? product.name : 'Unknown Product'),
+              unit: item.unit || (product ? product.unit : '')
+            };
+          }
+          return item;
+        });
+
+        setSale({ ...saleData, items: enrichedItems, customer } as any);
       } catch (error) {
         console.error(error);
       }
