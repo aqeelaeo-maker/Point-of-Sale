@@ -9,7 +9,7 @@ export default function Products() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>({
-    name: '', barcode: '', unit: 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1
+    name: '', barcode: '', unit: 'piece', has_sub_unit: false, sub_unit: '', conversion_rate: 1, cost_price: 0, price_per_unit: 0, stock: 0
   });
 
   const [search, setSearch] = useState('');
@@ -166,26 +166,6 @@ export default function Products() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Cost Price</label>
-              <input required type="number" step="0.01" className="w-full p-2 border rounded-lg" value={formData.cost_price} onChange={e => setFormData({...formData, cost_price: Number(e.target.value)})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Selling Price</label>
-              <input required type="number" step="0.01" className="w-full p-2 border rounded-lg" value={formData.price_per_unit} onChange={e => setFormData({...formData, price_per_unit: Number(e.target.value)})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Initial Stock</label>
-              <input required type="number" step="0.01" className="w-full p-2 border rounded-lg" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Batch Number</label>
-              <input type="text" className="w-full p-2 border rounded-lg" value={formData.batch_number} onChange={e => setFormData({...formData, batch_number: e.target.value})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Expiry Date</label>
-              <input type="date" className="w-full p-2 border rounded-lg" value={formData.expiry_date} onChange={e => setFormData({...formData, expiry_date: e.target.value})} />
-            </div>
             <div className="lg:col-span-3 border-t border-slate-200 pt-4 mt-2">
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4 cursor-pointer">
                 <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" checked={formData.has_sub_unit} onChange={e => setFormData({...formData, has_sub_unit: e.target.checked})} />
@@ -193,7 +173,7 @@ export default function Products() {
               </label>
               
               {formData.has_sub_unit && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Sub-unit Name</label>
                     <input type="text" placeholder="e.g., ml, gm, piece" className="w-full p-2 border rounded-lg" value={formData.sub_unit} onChange={e => setFormData({...formData, sub_unit: e.target.value})} />
@@ -201,18 +181,6 @@ export default function Products() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Conversion Rate</label>
                     <input type="number" min="1" step="any" className="w-full p-2 border rounded-lg" value={formData.conversion_rate} onChange={e => setFormData({...formData, conversion_rate: Number(e.target.value)})} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Sub-unit Cost</label>
-                    <div className="w-full p-2 bg-slate-100 border rounded-lg text-slate-600 font-medium">
-                      {formatCurrency((formData.cost_price || 0) / (formData.conversion_rate || 1))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Sub-unit Selling Price</label>
-                    <div className="w-full p-2 bg-slate-100 border rounded-lg text-slate-600 font-medium">
-                      {formatCurrency((formData.price_per_unit || 0) / (formData.conversion_rate || 1))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -231,11 +199,8 @@ export default function Products() {
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm uppercase tracking-wider">
               <th className="p-4 font-medium">Name</th>
               <th className="p-4 font-medium">Barcode</th>
-              <th className="p-4 font-medium">Cost</th>
-              <th className="p-4 font-medium">Selling Price</th>
-              <th className="p-4 font-medium">Stock</th>
-              <th className="p-4 font-medium">Batch</th>
-              <th className="p-4 font-medium">Expiry</th>
+              <th className="p-4 font-medium">Unit</th>
+              <th className="p-4 font-medium">Sub-unit</th>
               <th className="p-4 font-medium text-right">Actions</th>
             </tr>
           </thead>
@@ -244,25 +209,10 @@ export default function Products() {
               <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                 <td className="p-4 font-medium text-slate-900">{product.name}</td>
                 <td className="p-4 text-slate-500 font-mono text-sm">{product.barcode || '-'}</td>
-                <td className="p-4 text-slate-600 font-medium">{formatCurrency(product.cost_price || 0)}</td>
-                <td className="p-4 text-emerald-600 font-medium">
-                  {formatCurrency(product.price_per_unit)} / {product.unit}
-                  {product.has_sub_unit && product.conversion_rate && (
-                    <div className="text-xs text-slate-500 mt-1">
-                      {formatCurrency(product.price_per_unit / product.conversion_rate)} / {product.sub_unit}
-                    </div>
-                  )}
+                <td className="p-4 text-slate-600">{product.unit}</td>
+                <td className="p-4 text-slate-600">
+                  {product.has_sub_unit ? `1 ${product.unit} = ${product.conversion_rate} ${product.sub_unit}` : '-'}
                 </td>
-                <td className="p-4 text-slate-700">
-                  {product.stock} {product.unit}
-                  {product.has_sub_unit && product.conversion_rate && (
-                    <div className="text-xs text-slate-500 mt-1">
-                      ({(product.stock * product.conversion_rate).toFixed(2)} {product.sub_unit})
-                    </div>
-                  )}
-                </td>
-                <td className="p-4 text-slate-500">{product.batch_number || '-'}</td>
-                <td className="p-4 text-slate-500">{product.expiry_date || '-'}</td>
                 <td className="p-4 text-right">
                   <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Edit</button>
                   <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
@@ -271,7 +221,7 @@ export default function Products() {
             ))}
             {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-slate-500">No products found.</td>
+                <td colSpan={5} className="p-8 text-center text-slate-500">No products found.</td>
               </tr>
             )}
           </tbody>

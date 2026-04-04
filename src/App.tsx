@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { ShoppingCart, Users, Truck, Package, Settings as SettingsIcon, LayoutDashboard, History, Menu, X, LogOut, Shield } from 'lucide-react';
+import { ShoppingCart, Users, Truck, Package, Settings as SettingsIcon, LayoutDashboard, History, Menu, X, LogOut, Shield, Archive } from 'lucide-react';
 import { cn } from './lib/utils';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './lib/firebase';
@@ -9,6 +9,7 @@ import { doc, getDoc } from 'firebase/firestore';
 // Pages
 import POS from './pages/POS';
 import Products from './pages/Products';
+import Stock from './pages/Stock';
 import Customers from './pages/Customers';
 import Vendors from './pages/Vendors';
 import Invoice from './pages/Invoice';
@@ -28,6 +29,7 @@ function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo, isSuperAdmin }:
     { name: 'POS', path: '/pos', icon: ShoppingCart },
     { name: 'Sales History', path: '/sales', icon: History },
     { name: 'Products', path: '/products', icon: Package },
+    { name: 'Stock', path: '/stock', icon: Archive },
     { name: 'Customers', path: '/customers', icon: Users },
     { name: 'Vendors', path: '/vendors', icon: Truck },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
@@ -181,6 +183,7 @@ export default function App() {
         <Route path="/pos" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><POS /></Layout>} />
         <Route path="/sales" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><SalesHistory /></Layout>} />
         <Route path="/products" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Products /></Layout>} />
+        <Route path="/stock" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Stock /></Layout>} />
         <Route path="/customers" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Customers /></Layout>} />
         <Route path="/vendors" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Vendors /></Layout>} />
         <Route path="/settings" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Settings /></Layout>} />
