@@ -12,6 +12,7 @@ export default function Settings() {
     language: 'en',
     units: 'piece, kg, liter'
   });
+  const [lowStockLimits, setLowStockLimits] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -27,6 +28,17 @@ export default function Settings() {
           language: data.language || 'en',
           units: data.units || 'piece, kg, liter'
         });
+        
+        if (data.low_stock_limits) {
+          try {
+            setLowStockLimits(JSON.parse(data.low_stock_limits));
+          } catch (e) {}
+        } else if (data.low_stock_limit) {
+          const parsedUnits = (data.units || 'piece, kg, liter').split(',').map((u:string) => u.trim()).filter(Boolean);
+          const defaultLimits: Record<string, number> = {};
+          parsedUnits.forEach((u:string) => defaultLimits[u] = Number(data.low_stock_limit));
+          setLowStockLimits(defaultLimits);
+        }
       });
   }, []);
 
@@ -47,7 +59,10 @@ export default function Settings() {
     setMessage('');
     
     try {
-      const res = await updateSettings(settings);
+      const res = await updateSettings({
+        ...settings,
+        low_stock_limits: JSON.stringify(lowStockLimits)
+      });
       
       if (res.success) {
         setMessage('Settings saved successfully!');
@@ -139,6 +154,24 @@ export default function Settings() {
                 placeholder="e.g. piece, kg, liter, box, pack"
               />
               <p className="text-xs text-slate-500 mt-2">These units will be available when adding or editing products.</p>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Low Stock Thresholds (per unit)</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {settings.units.split(',').map(u => u.trim()).filter(Boolean).map(unit => (
+                  <div key={unit} className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <label className="block text-xs font-medium text-slate-500 mb-1 capitalize">{unit}</label>
+                    <input 
+                      type="number" 
+                      min="0"
+                      className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
+                      value={lowStockLimits[unit] ?? 10} 
+                      onChange={e => setLowStockLimits({...lowStockLimits, [unit]: Number(e.target.value)})} 
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-2">Products with stock at or below these numbers will trigger a low stock alert on the dashboard.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Currency</label>
