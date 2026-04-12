@@ -177,6 +177,18 @@ export default function POS() {
               className="w-full pl-12 pr-4 py-3.5 bg-slate-100/80 border-transparent rounded-2xl focus:bg-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-slate-900 placeholder:text-slate-500 font-medium"
               value={search}
               onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  const val = e.currentTarget.value.trim();
+                  if (val !== '') {
+                    const exactMatch = products.find(p => p.barcode === val);
+                    if (exactMatch) {
+                      addToCart(exactMatch);
+                      setSearch('');
+                    }
+                  }
+                }
+              }}
             />
           </div>
         </div>
