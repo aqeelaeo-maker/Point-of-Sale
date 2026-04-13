@@ -185,6 +185,9 @@ export default function Invoice() {
           <p>Thank you for your business!</p>
           <p>Please keep this receipt for your records.</p>
         </div>
+        
+        {/* Invisible element to trigger auto-cut on thermal printers */}
+        <div className="print:break-after-page"></div>
       </div>
 
       {/* Print Styles */}
@@ -215,6 +218,10 @@ export default function Invoice() {
           }
           .bg-white.shadow-xl * {
             visibility: visible;
+          }
+          .print\\:break-after-page {
+            page-break-after: always;
+            break-after: page;
           }
         }
       `}</style>
