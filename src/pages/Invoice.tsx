@@ -10,7 +10,7 @@ export default function Invoice() {
   const navigate = useNavigate();
   const [sale, setSale] = useState<Sale | null>(null);
   const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '' });
-  const [printMode, setPrintMode] = useState<'thermal' | 'a4'>('thermal');
+  const [printMode, setPrintMode] = useState<'thermal80' | 'thermal58' | 'a4'>('thermal58');
   const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
@@ -81,9 +81,10 @@ export default function Invoice() {
           <select 
             className="p-2 border rounded-lg bg-white w-full sm:w-auto"
             value={printMode}
-            onChange={(e) => setPrintMode(e.target.value as 'thermal' | 'a4')}
+            onChange={(e) => setPrintMode(e.target.value as 'thermal80' | 'thermal58' | 'a4')}
           >
-            <option value="thermal">Thermal Receipt (80mm)</option>
+            <option value="thermal58">Thermal Receipt (58mm)</option>
+            <option value="thermal80">Thermal Receipt (80mm)</option>
             <option value="a4">Full Page (A4)</option>
           </select>
           <button 
@@ -96,47 +97,53 @@ export default function Invoice() {
       </div>
 
       {/* Printable Area */}
-      <div className={`bg-white shadow-xl print:shadow-none ${printMode === 'thermal' ? 'w-[80mm] p-4 text-sm text-black font-bold font-sans tracking-tight' : 'w-[210mm] min-h-[297mm] p-12'}`}>
+      <div className={`bg-white shadow-xl print:shadow-none mx-auto ${
+        printMode === 'thermal58' 
+          ? 'w-[58mm] p-2 text-xs text-black font-bold font-mono tracking-tight leading-tight' 
+          : printMode === 'thermal80'
+            ? 'w-[80mm] p-4 text-sm text-black font-bold font-mono tracking-tight leading-tight'
+            : 'w-[210mm] min-h-[297mm] p-12 font-sans'
+      }`}>
         
         {/* Header */}
-        <div className={`text-center ${printMode === 'a4' ? 'mb-12' : 'mb-6'}`}>
+        <div className={`text-center ${printMode === 'a4' ? 'mb-12' : 'mb-4'}`}>
           {settings.store_logo && (
-            <img src={settings.store_logo} alt="Logo" className={`mx-auto object-contain ${printMode === 'a4' ? 'h-24 mb-4' : 'h-12 mb-2 grayscale contrast-125'}`} />
+            <img src={settings.store_logo} alt="Logo" className={`mx-auto object-contain ${printMode === 'a4' ? 'h-24 mb-4' : 'h-10 mb-2 grayscale contrast-125'}`} />
           )}
-          <h1 className={`font-black ${printMode === 'a4' ? 'text-4xl' : 'text-2xl uppercase'}`}>{settings.store_name}</h1>
-          <p className={`${printMode === 'thermal' ? 'text-black font-bold text-xs mt-1' : 'text-slate-500 mt-1'}`}>{settings.store_address}</p>
-          <p className={`${printMode === 'thermal' ? 'text-black font-bold text-xs' : 'text-slate-500'}`}>Tel: {settings.store_phone}</p>
+          <h1 className={`font-black ${printMode === 'a4' ? 'text-4xl' : printMode === 'thermal58' ? 'text-lg uppercase tracking-widest' : 'text-2xl uppercase tracking-widest'}`}>{settings.store_name}</h1>
+          <p className={`${printMode.startsWith('thermal') ? 'text-black font-bold text-[10px] sm:text-xs mt-1' : 'text-slate-500 mt-1'}`}>{settings.store_address}</p>
+          <p className={`${printMode.startsWith('thermal') ? 'text-black font-bold text-[10px] sm:text-xs' : 'text-slate-500'}`}>Tel: {settings.store_phone}</p>
         </div>
 
         {/* Invoice Info */}
-        <div className={`flex justify-between pb-4 ${printMode === 'a4' ? 'mb-8 border-b border-slate-200' : 'mb-4 text-xs border-b-2 border-dashed border-black'}`}>
+        <div className={`flex justify-between pb-3 ${printMode === 'a4' ? 'mb-8 border-b border-slate-200' : 'mb-3 text-[10px] sm:text-xs border-b-2 border-dashed border-black'}`}>
           <div>
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Invoice No:</span> #{sale.id?.toString().padStart(6, '0')}</p>
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Date:</span> {sale.date ? format(new Date(sale.date), 'PP p') : ''}</p>
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Inv No:</span> #{sale.id?.toString().padStart(6, '0')}</p>
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Date:</span> {sale.date ? format(new Date(sale.date), printMode === 'thermal58' ? 'dd/MM/yy HH:mm' : 'PP p') : ''}</p>
           </div>
           <div className="text-right">
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Customer:</span> {sale.customer?.name || 'Walk-in'}</p>
-            {sale.customer && <p className={`${printMode === 'thermal' ? 'text-black' : 'text-slate-500'}`}>{sale.customer.phone}</p>}
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Cust:</span> {sale.customer?.name || 'Walk-in'}</p>
+            {sale.customer && <p className={`${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-500'}`}>{sale.customer.phone}</p>}
           </div>
         </div>
 
         {/* Items Table */}
-        <table className="w-full text-left mb-8">
+        <table className="w-full text-left mb-6">
           <thead>
-            <tr className={`${printMode === 'thermal' ? 'border-b-2 border-black' : 'border-b border-slate-900'}`}>
-              <th className={`py-2 ${printMode === 'thermal' ? 'font-black' : 'font-semibold'}`}>Item</th>
-              <th className={`py-2 text-right ${printMode === 'thermal' ? 'font-black' : 'font-semibold'}`}>Qty</th>
-              <th className={`py-2 text-right ${printMode === 'thermal' ? 'font-black' : 'font-semibold'}`}>Price</th>
-              <th className={`py-2 text-right ${printMode === 'thermal' ? 'font-black' : 'font-semibold'}`}>Total</th>
+            <tr className={`${printMode.startsWith('thermal') ? 'border-b-2 border-black' : 'border-b border-slate-900'}`}>
+              <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Item</th>
+              <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Qty</th>
+              <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Price</th>
+              <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Total</th>
             </tr>
           </thead>
-          <tbody className={`${printMode === 'thermal' ? 'text-xs' : ''}`}>
+          <tbody className={`${printMode === 'thermal58' ? 'text-[10px]' : printMode === 'thermal80' ? 'text-xs' : ''}`}>
             {sale.items.map((item, idx) => (
-              <tr key={idx} className={`${printMode === 'thermal' ? 'border-b border-dashed border-black/30' : 'border-b border-slate-100'}`}>
-                <td className={`py-2 ${printMode === 'thermal' ? 'font-bold' : ''}`}>{item.product_name}</td>
-                <td className="py-2 text-right">{item.quantity} {item.unit}</td>
-                <td className="py-2 text-right">{formatCurrency(item.unit_price)}</td>
-                <td className="py-2 text-right">{formatCurrency(item.total_price)}</td>
+              <tr key={idx} className={`${printMode.startsWith('thermal') ? 'border-b border-dashed border-black/30' : 'border-b border-slate-100'}`}>
+                <td className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-bold' : ''}`}>{item.product_name}</td>
+                <td className="py-1.5 text-right">{item.quantity} {item.unit}</td>
+                <td className="py-1.5 text-right">{formatCurrency(item.unit_price)}</td>
+                <td className="py-1.5 text-right">{formatCurrency(item.total_price)}</td>
               </tr>
             ))}
           </tbody>
@@ -145,34 +152,34 @@ export default function Invoice() {
         {/* Totals */}
         <div className="flex justify-end">
           <div className={`${printMode === 'a4' ? 'w-1/2' : 'w-full'}`}>
-            <div className={`flex justify-between py-2 ${printMode === 'thermal' ? 'text-black' : 'text-slate-600'}`}>
+            <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
               <span>Current Sale:</span>
               <span>{formatCurrency(sale.total_amount)}</span>
             </div>
             {(sale.previous_loan || 0) > 0 && (
-              <div className={`flex justify-between py-2 ${printMode === 'thermal' ? 'text-black' : 'text-slate-600'}`}>
+              <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
                 <span>Previous Loan:</span>
                 <span>{formatCurrency(sale.previous_loan || 0)}</span>
               </div>
             )}
-            <div className={`flex justify-between py-2 text-xl font-black ${printMode === 'thermal' ? 'border-t-2 border-black' : 'border-t border-slate-900'}`}>
+            <div className={`flex justify-between py-1.5 ${printMode === 'thermal58' ? 'text-base' : 'text-xl'} font-black ${printMode.startsWith('thermal') ? 'border-t-2 border-black' : 'border-t border-slate-900'}`}>
               <span>Total Due:</span>
               <span>{formatCurrency(sale.total_due ?? sale.total_amount)}</span>
             </div>
-            <div className={`flex justify-between py-2 ${printMode === 'thermal' ? 'text-black' : 'text-slate-600'}`}>
+            <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
               <span>Paid Amount:</span>
               <span>{formatCurrency(sale.paid_amount)}</span>
             </div>
             
             {sale.paid_amount > (sale.total_due ?? sale.total_amount) && (
-              <div className={`flex justify-between py-2 font-black ${printMode === 'thermal' ? 'text-black' : 'text-emerald-600 font-semibold'}`}>
+              <div className={`flex justify-between py-1.5 font-black ${printMode.startsWith('thermal') ? 'text-black' : 'text-emerald-600 font-semibold'}`}>
                 <span>Change:</span>
                 <span>{formatCurrency(sale.paid_amount - (sale.total_due ?? sale.total_amount))}</span>
               </div>
             )}
             
             {(sale.total_due ?? sale.total_amount) > sale.paid_amount && (
-              <div className={`flex justify-between py-2 font-black mt-2 ${printMode === 'thermal' ? 'text-black border-t-2 border-dashed border-black' : 'text-red-600 font-semibold border-t border-slate-200'}`}>
+              <div className={`flex justify-between py-1.5 font-black mt-1 ${printMode.startsWith('thermal') ? 'text-black border-t-2 border-dashed border-black' : 'text-red-600 font-semibold border-t border-slate-200'}`}>
                 <span>Remaining Loan:</span>
                 <span>{formatCurrency((sale.total_due ?? sale.total_amount) - sale.paid_amount)}</span>
               </div>
@@ -181,7 +188,7 @@ export default function Invoice() {
         </div>
 
         {/* Footer */}
-        <div className={`mt-12 text-center text-sm ${printMode === 'thermal' ? 'text-black font-bold' : 'text-slate-500'}`}>
+        <div className={`mt-8 text-center ${printMode === 'thermal58' ? 'text-[10px]' : 'text-sm'} ${printMode.startsWith('thermal') ? 'text-black font-bold' : 'text-slate-500'}`}>
           <p>Thank you for your business!</p>
           <p>Please keep this receipt for your records.</p>
         </div>
