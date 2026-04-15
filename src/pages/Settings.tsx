@@ -10,7 +10,8 @@ export default function Settings() {
     store_logo: '',
     currency: 'USD',
     language: 'en',
-    units: 'piece, kg, liter'
+    units: 'piece, kg, liter',
+    invoice_header_type: 'name'
   });
   const [lowStockLimits, setLowStockLimits] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
@@ -26,7 +27,8 @@ export default function Settings() {
           store_logo: data.store_logo || '',
           currency: data.currency || 'USD',
           language: data.language || 'en',
-          units: data.units || 'piece, kg, liter'
+          units: data.units || 'piece, kg, liter',
+          invoice_header_type: data.invoice_header_type || 'name'
         });
         
         if (data.low_stock_limits) {
@@ -190,6 +192,17 @@ export default function Settings() {
                 <option value="AED">AED (د.إ)</option>
                 <option value="SAR">SAR (﷼)</option>
                 <option value="PKR">PKR (₨)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Invoice Header Display</label>
+              <select 
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all bg-white"
+                value={settings.invoice_header_type}
+                onChange={e => setSettings({...settings, invoice_header_type: e.target.value})}
+              >
+                <option value="name">Store Name</option>
+                <option value="logo">Store Logo</option>
               </select>
             </div>
             <div>

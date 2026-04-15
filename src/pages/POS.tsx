@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Product, Customer } from '../types';
 import { Search, Plus, Minus, Trash2, Printer, ShoppingCart, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 import { getProducts, getCustomers, getSettings, addSale, getSaleById, updateSale } from '../lib/api';
 
@@ -129,6 +130,7 @@ export default function POS() {
     const finalPaidAmount = paidAmountInput === '' ? totalDue : Number(paidAmountInput);
 
     const saleData = {
+      invoice_number: format(new Date(), 'yyyyMMddHHmmss'),
       customer_id: selectedCustomer,
       total_amount: totalAmount,
       paid_amount: finalPaidAmount,

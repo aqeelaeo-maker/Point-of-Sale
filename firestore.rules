@@ -112,21 +112,24 @@ service cloud.firestore {
     }
 
     function isValidCustomer(data) {
-      return hasOnlyAllowedFields(['name', 'phone', 'loan_balance']) &&
+      return hasOnlyAllowedFields(['name', 'phone', 'address', 'loan_balance']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
              (!('phone' in data) || (data.phone is string && data.phone.size() < 50)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 500)) &&
              data.loan_balance is number;
     }
 
     function isValidVendor(data) {
-      return hasOnlyAllowedFields(['name', 'phone', 'balance']) &&
+      return hasOnlyAllowedFields(['name', 'phone', 'address', 'balance']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
              (!('phone' in data) || (data.phone is string && data.phone.size() < 50)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 500)) &&
              data.balance is number;
     }
 
     function isValidSale(data) {
-      return hasOnlyAllowedFields(['customer_id', 'total_amount', 'paid_amount', 'previous_loan', 'total_due', 'date']) &&
+      return hasOnlyAllowedFields(['invoice_number', 'customer_id', 'total_amount', 'paid_amount', 'previous_loan', 'total_due', 'date']) &&
+             (!('invoice_number' in data) || (data.invoice_number is string && data.invoice_number.size() < 100)) &&
              (!('customer_id' in data) || data.customer_id == null || (data.customer_id is string && data.customer_id.size() < 100)) &&
              data.total_amount is number && data.total_amount >= 0 &&
              data.paid_amount is number && data.paid_amount >= 0 &&

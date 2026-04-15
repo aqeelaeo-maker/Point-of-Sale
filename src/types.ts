@@ -17,6 +17,7 @@ export type Customer = {
   id: string;
   name: string;
   phone: string;
+  address?: string;
   loan_balance: number;
 };
 
@@ -24,6 +25,7 @@ export type Vendor = {
   id: string;
   name: string;
   phone: string;
+  address?: string;
   balance: number;
 };
 
@@ -41,6 +43,7 @@ export type SaleItem = {
 
 export type Sale = {
   id?: string;
+  invoice_number?: string;
   customer_id: string | null;
   total_amount: number;
   paid_amount: number;

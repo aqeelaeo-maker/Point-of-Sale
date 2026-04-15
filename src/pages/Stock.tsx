@@ -58,16 +58,21 @@ export default function Stock() {
 
     const newStock = (editingProduct.stock || 0) + formData.add_stock;
 
-    await updateProduct(editingProduct.id, {
-      stock: newStock,
-      cost_price: formData.cost_price,
-      price_per_unit: formData.price_per_unit,
-      batch_number: formData.batch_number,
-      expiry_date: formData.expiry_date
-    });
+    try {
+      await updateProduct(editingProduct.id, {
+        stock: newStock,
+        cost_price: formData.cost_price,
+        price_per_unit: formData.price_per_unit,
+        batch_number: formData.batch_number,
+        expiry_date: formData.expiry_date
+      });
 
-    setEditingProduct(null);
-    fetchProducts();
+      setEditingProduct(null);
+      fetchProducts();
+    } catch (error) {
+      console.error("Error updating stock:", error);
+      alert("Failed to update stock. Please check your permissions and try again.");
+    }
   };
 
   return (

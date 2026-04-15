@@ -9,7 +9,7 @@ export default function Invoice() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [sale, setSale] = useState<Sale | null>(null);
-  const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '' });
+  const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '', invoice_header_type: 'name' });
   const [printMode, setPrintMode] = useState<'thermal80' | 'thermal58' | 'a4'>('thermal58');
   const [currency, setCurrency] = useState('USD');
 
@@ -53,7 +53,8 @@ export default function Invoice() {
           store_name: data.store_name || 'GROCERY STORE',
           store_address: data.store_address || '',
           store_phone: data.store_phone || '',
-          store_logo: data.store_logo || ''
+          store_logo: data.store_logo || '',
+          invoice_header_type: data.invoice_header_type || 'name'
         });
         if (data.currency) setCurrency(data.currency);
       })
@@ -107,10 +108,11 @@ export default function Invoice() {
         
         {/* Header */}
         <div className={`text-center ${printMode === 'a4' ? 'mb-12' : 'mb-4'}`}>
-          {settings.store_logo && (
-            <img src={settings.store_logo} alt="Logo" className={`mx-auto object-contain ${printMode === 'a4' ? 'h-24 mb-4' : 'h-10 mb-2 grayscale contrast-125'}`} />
+          {settings.invoice_header_type === 'logo' && settings.store_logo ? (
+            <img src={settings.store_logo} alt="Logo" className={`mx-auto object-contain ${printMode === 'a4' ? 'h-24 mb-4' : 'h-16 mb-2 grayscale contrast-125'}`} />
+          ) : (
+            <h1 className={`font-black ${printMode === 'a4' ? 'text-4xl' : printMode === 'thermal58' ? 'text-xl uppercase tracking-widest' : 'text-2xl uppercase tracking-widest'}`}>{settings.store_name}</h1>
           )}
-          <h1 className={`font-black ${printMode === 'a4' ? 'text-4xl' : printMode === 'thermal58' ? 'text-lg uppercase tracking-widest' : 'text-2xl uppercase tracking-widest'}`}>{settings.store_name}</h1>
           <p className={`${printMode.startsWith('thermal') ? 'text-black font-bold text-[10px] sm:text-xs mt-1' : 'text-slate-500 mt-1'}`}>{settings.store_address}</p>
           <p className={`${printMode.startsWith('thermal') ? 'text-black font-bold text-[10px] sm:text-xs' : 'text-slate-500'}`}>Tel: {settings.store_phone}</p>
         </div>
@@ -118,7 +120,7 @@ export default function Invoice() {
         {/* Invoice Info */}
         <div className={`flex justify-between pb-3 ${printMode === 'a4' ? 'mb-8 border-b border-slate-200' : 'mb-3 text-[10px] sm:text-xs border-b-2 border-dashed border-black'}`}>
           <div>
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Inv No:</span> #{sale.id?.toString().padStart(6, '0')}</p>
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Inv No:</span> #{sale.invoice_number || sale.id?.toString().padStart(6, '0')}</p>
             <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Date:</span> {sale.date ? format(new Date(sale.date), printMode === 'thermal58' ? 'dd/MM/yy HH:mm' : 'PP p') : ''}</p>
           </div>
           <div className="text-right">
@@ -131,7 +133,7 @@ export default function Invoice() {
         <table className="w-full text-left mb-6">
           <thead>
             <tr className={`${printMode.startsWith('thermal') ? 'border-b-2 border-black' : 'border-b border-slate-900'}`}>
-              <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Item</th>
+              <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-1/2' : 'font-semibold'}`}>Item</th>
               <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Qty</th>
               <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Price</th>
               <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider' : 'font-semibold'}`}>Total</th>
@@ -140,10 +142,10 @@ export default function Invoice() {
           <tbody className={`${printMode === 'thermal58' ? 'text-[10px]' : printMode === 'thermal80' ? 'text-xs' : ''}`}>
             {sale.items.map((item, idx) => (
               <tr key={idx} className={`${printMode.startsWith('thermal') ? 'border-b border-dashed border-black/30' : 'border-b border-slate-100'}`}>
-                <td className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-bold' : ''}`}>{item.product_name}</td>
-                <td className="py-1.5 text-right">{item.quantity} {item.unit}</td>
-                <td className="py-1.5 text-right">{formatCurrency(item.unit_price)}</td>
-                <td className="py-1.5 text-right">{formatCurrency(item.total_price)}</td>
+                <td className={`py-1.5 pr-1 ${printMode.startsWith('thermal') ? 'font-bold leading-tight' : ''}`}>{item.product_name}</td>
+                <td className="py-1.5 text-right whitespace-nowrap">{item.quantity}</td>
+                <td className="py-1.5 text-right whitespace-nowrap">{printMode.startsWith('thermal') ? item.unit_price.toLocaleString() : formatCurrency(item.unit_price)}</td>
+                <td className="py-1.5 text-right whitespace-nowrap">{printMode.startsWith('thermal') ? item.total_price.toLocaleString() : formatCurrency(item.total_price)}</td>
               </tr>
             ))}
           </tbody>
@@ -188,7 +190,7 @@ export default function Invoice() {
         </div>
 
         {/* Footer */}
-        <div className={`mt-8 text-center ${printMode === 'thermal58' ? 'text-[10px]' : 'text-sm'} ${printMode.startsWith('thermal') ? 'text-black font-bold' : 'text-slate-500'}`}>
+        <div className={`mt-8 text-center ${printMode === 'thermal58' ? 'text-[8px]' : printMode === 'thermal80' ? 'text-[10px]' : 'text-sm'} ${printMode.startsWith('thermal') ? 'text-black font-bold' : 'text-slate-500'}`}>
           <p>Thank you for your business!</p>
           <p>Please keep this receipt for your records.</p>
         </div>

@@ -84,15 +84,36 @@ export default function Products() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await updateProduct(editingId, formData);
-    } else {
-      await addProduct(formData);
+    const { id, ...productData } = formData as any;
+    
+    // Remove undefined and null values to prevent Firestore errors
+    Object.keys(productData).forEach(key => {
+      if (productData[key] === undefined || productData[key] === null) {
+        delete productData[key];
+      }
+    });
+
+    // Ensure required fields are present for older products to satisfy Firestore rules
+    if (productData.cost_price === undefined) productData.cost_price = 0;
+    if (productData.price_per_unit === undefined) productData.price_per_unit = 0;
+    if (productData.stock === undefined) productData.stock = 0;
+    if (productData.conversion_rate === undefined) productData.conversion_rate = 1;
+    if (productData.has_sub_unit === undefined) productData.has_sub_unit = false;
+    
+    try {
+      if (editingId) {
+        await updateProduct(editingId, productData);
+      } else {
+        await addProduct(productData);
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setFormData({ name: '', barcode: '', unit: availableUnits[0] || 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1 });
+      fetchProducts();
+    } catch (error) {
+      console.error("Error saving product:", error);
+      alert("Failed to save product. Please check your permissions and try again.");
     }
-    setShowForm(false);
-    setEditingId(null);
-    setFormData({ name: '', barcode: '', unit: availableUnits[0] || 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1 });
-    fetchProducts();
   };
 
   const handleEdit = (product: Product) => {
