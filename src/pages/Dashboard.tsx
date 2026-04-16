@@ -60,7 +60,10 @@ export default function Dashboard() {
     return expDate <= thirtyDaysFromNow;
   });
 
+  const netWorth = products.reduce((sum, p) => sum + (p.cost_price * p.stock), 0);
+
   const stats = [
+    { title: 'Net Worth (Inventory)', value: formatCurrency(netWorth), icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-100' },
     { title: 'Total Revenue (30d)', value: formatCurrency(data.totalRevenue), icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-100' },
     { title: 'Total Profit (30d)', value: formatCurrency(data.totalProfit), icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-100' },
     { title: 'Customer Loans', value: formatCurrency(data.totalLoans), icon: Users, color: 'text-orange-600', bg: 'bg-orange-100' },
