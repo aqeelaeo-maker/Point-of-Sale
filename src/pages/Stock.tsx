@@ -135,6 +135,7 @@ export default function Stock() {
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm uppercase tracking-wider">
+              <th className="p-4 font-medium w-16">Ser No</th>
               <th className="p-4 font-medium">Name</th>
               <th className="p-4 font-medium">Barcode</th>
               <th className="p-4 font-medium">Stock</th>
@@ -146,8 +147,9 @@ export default function Stock() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filteredProducts.map(product => (
+            {filteredProducts.map((product, idx) => (
               <tr key={product.id} className="hover:bg-slate-50 transition-colors">
+                <td className="p-4 text-slate-500 font-medium">{idx + 1}</td>
                 <td className="p-4 font-medium text-slate-900">{product.name}</td>
                 <td className="p-4 text-slate-500 font-mono text-sm">{product.barcode || '-'}</td>
                 <td className="p-4 text-slate-700 font-medium">
@@ -176,7 +178,7 @@ export default function Stock() {
             ))}
             {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-slate-500">No products found.</td>
+                <td colSpan={9} className="p-8 text-center text-slate-500">No products found.</td>
               </tr>
             )}
           </tbody>
