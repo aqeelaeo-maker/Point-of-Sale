@@ -90,7 +90,7 @@ export default function SalesHistory() {
           <tbody className="divide-y divide-slate-100">
             {sales.map(sale => (
               <tr key={sale.id} className="hover:bg-slate-50 transition-colors">
-                <td className="p-4 font-mono text-slate-900 font-medium">#{sale.id.toString().padStart(6, '0')}</td>
+                <td className="p-4 font-mono text-slate-900 font-medium">#{sale.invoice_number || sale.id.toString().padStart(6, '0')}</td>
                 <td className="p-4 text-slate-500">{format(new Date(sale.date), 'PP p')}</td>
                 <td className="p-4 text-slate-700">{sale.customer_name || 'Walk-in'}</td>
                 <td className="p-4 text-right font-medium text-slate-900">{formatCurrency(sale.total_amount)}</td>

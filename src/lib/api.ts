@@ -1,5 +1,6 @@
 import { db, auth } from './firebase';
-import { collection, getDocs, getDoc, addDoc, setDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, getDoc, addDoc, setDoc, deleteDoc, doc, query, orderBy, writeBatch, limit } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 const getTenantPath = (path: string) => {
   const uid = auth.currentUser?.uid;
@@ -135,6 +136,35 @@ export const getSaleById = async (id) => {
   return { id: saleDoc.id, ...saleDoc.data(), items };
 };
 
+export const getNextInvoiceNumber = async () => {
+  if (!auth.currentUser?.uid) return '';
+  const todayStr = format(new Date(), 'ddMMyy');
+
+  const q = query(
+    collection(db, getTenantPath('sales')),
+    orderBy('date', 'desc'),
+    limit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) {
+    return `${todayStr}0001`;
+  }
+
+  const lastSale = snapshot.docs[0].data();
+  const lastInvoiceNumber = lastSale.invoice_number || '';
+
+  if (lastInvoiceNumber && lastInvoiceNumber.length >= 10 && lastInvoiceNumber.startsWith(todayStr)) {
+    const sequenceStr = lastInvoiceNumber.slice(6);
+    const sequence = parseInt(sequenceStr, 10);
+    if (!isNaN(sequence)) {
+      return `${todayStr}${String(sequence + 1).padStart(4, '0')}`;
+    }
+  }
+
+  return `${todayStr}0001`;
+};
+
 export const addSale = async (saleData) => {
   const batch = writeBatch(db);
   
@@ -150,7 +180,10 @@ export const addSale = async (saleData) => {
     }
   }
 
+  const invoiceNumber = await getNextInvoiceNumber();
+
   batch.set(saleRef, {
+    invoice_number: invoiceNumber,
     customer_id: saleData.customer_id,
     total_amount: saleData.total_amount,
     paid_amount: saleData.paid_amount,

@@ -130,7 +130,6 @@ export default function POS() {
     const finalPaidAmount = paidAmountInput === '' ? totalDue : Number(paidAmountInput);
 
     const saleData = {
-      invoice_number: format(new Date(), 'yyyyMMddHHmmss'),
       customer_id: selectedCustomer,
       total_amount: totalAmount,
       paid_amount: finalPaidAmount,
