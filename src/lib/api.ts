@@ -186,9 +186,10 @@ export const addSale = async (saleData) => {
     invoice_number: invoiceNumber,
     customer_id: saleData.customer_id,
     total_amount: saleData.total_amount,
+    discount: saleData.discount || 0,
     paid_amount: saleData.paid_amount,
     previous_loan: previousLoan,
-    total_due: saleData.total_amount + previousLoan,
+    total_due: Math.max(0, saleData.total_amount - (saleData.discount || 0)) + previousLoan,
     date: new Date().toISOString()
   });
 
@@ -217,7 +218,7 @@ export const addSale = async (saleData) => {
 
   // Update customer loan if applicable
   if (saleData.customer_id) {
-    const loanAmount = saleData.total_amount - saleData.paid_amount;
+    const loanAmount = Math.max(0, saleData.total_amount - (saleData.discount || 0)) - saleData.paid_amount;
     const customerRef = doc(db, getTenantPath(`customers/${saleData.customer_id}`));
     batch.update(customerRef, { loan_balance: previousLoan + loanAmount });
   }
@@ -236,7 +237,7 @@ export const updateSale = async (id: string, saleData: any) => {
 
   // Revert old customer loan
   if (oldSaleData.customer_id) {
-    const oldLoanAmount = oldSaleData.total_amount - oldSaleData.paid_amount;
+    const oldLoanAmount = Math.max(0, oldSaleData.total_amount - (oldSaleData.discount || 0)) - oldSaleData.paid_amount;
     const oldCustomerRef = doc(db, getTenantPath(`customers/${oldSaleData.customer_id}`));
     const oldCustomerDoc = await getDoc(oldCustomerRef);
     if (oldCustomerDoc.exists()) {
@@ -266,10 +267,10 @@ export const updateSale = async (id: string, saleData: any) => {
       // If it's the same customer, we need to account for the reverted loan amount
       previousLoan = newCustomerDoc.data().loan_balance || 0;
       if (saleData.customer_id === oldSaleData.customer_id) {
-        previousLoan -= (oldSaleData.total_amount - oldSaleData.paid_amount);
+        previousLoan -= (Math.max(0, oldSaleData.total_amount - (oldSaleData.discount || 0)) - oldSaleData.paid_amount);
       }
       
-      const newLoanAmount = saleData.total_amount - saleData.paid_amount;
+      const newLoanAmount = Math.max(0, saleData.total_amount - (saleData.discount || 0)) - saleData.paid_amount;
       batch.update(newCustomerRef, { loan_balance: previousLoan + newLoanAmount });
     }
   }
@@ -278,9 +279,10 @@ export const updateSale = async (id: string, saleData: any) => {
   batch.update(saleRef, {
     customer_id: saleData.customer_id,
     total_amount: saleData.total_amount,
+    discount: saleData.discount || 0,
     paid_amount: saleData.paid_amount,
     previous_loan: previousLoan,
-    total_due: saleData.total_amount + previousLoan,
+    total_due: Math.max(0, saleData.total_amount - (saleData.discount || 0)) + previousLoan,
     // keep original date
   });
 

@@ -13,6 +13,7 @@ export default function POS() {
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
   const [paidAmountInput, setPaidAmountInput] = useState<string>('');
+  const [discountInput, setDiscountInput] = useState<string>('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currency, setCurrency] = useState('USD');
   const navigate = useNavigate();
@@ -35,6 +36,9 @@ export default function POS() {
           const saleData = await getSaleById(editSaleId);
           setSelectedCustomer(saleData.customer_id || null);
           setPaidAmountInput(saleData.paid_amount.toString());
+          if (saleData.discount) {
+            setDiscountInput(saleData.discount.toString());
+          }
           
           // Reconstruct cart
           const reconstructedCart = saleData.items.map((item: any) => {
@@ -120,9 +124,10 @@ export default function POS() {
   };
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+  const discount = Number(discountInput) || 0;
   const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
   const previousLoan = selectedCustomerData?.loan_balance || 0;
-  const totalDue = totalAmount + previousLoan;
+  const totalDue = Math.max(0, totalAmount - discount) + previousLoan;
 
   const canCheckout = cart.length > 0 || (selectedCustomer && Number(paidAmountInput) > 0);
 
@@ -134,6 +139,7 @@ export default function POS() {
     const saleData = {
       customer_id: selectedCustomer,
       total_amount: totalAmount,
+      discount: discount,
       paid_amount: finalPaidAmount,
       items: cart.map(item => ({
         product_id: item.id,
@@ -337,6 +343,12 @@ export default function POS() {
             <span>Current Sale</span>
             <span>{formatCurrency(totalAmount)}</span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-emerald-600">
+              <span>Discount</span>
+              <span>-{formatCurrency(discount)}</span>
+            </div>
+          )}
           {selectedCustomerData && (
             <div className="flex justify-between text-slate-600">
               <span>Previous Loan</span>
@@ -349,15 +361,27 @@ export default function POS() {
           </div>
           
           <div className="pt-4 border-t border-slate-200">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Paid Amount</label>
-            <div className="relative">
-              <input
-                type="number"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                value={paidAmountInput}
-                onChange={e => setPaidAmountInput(e.target.value)}
-                placeholder={`Exact amount: ${totalDue.toFixed(2)}`}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Discount</label>
+                <input
+                  type="number"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  value={discountInput}
+                  onChange={e => setDiscountInput(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Paid Amount</label>
+                <input
+                  type="number"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  value={paidAmountInput}
+                  onChange={e => setPaidAmountInput(e.target.value)}
+                  placeholder={`Exact amount: ${totalDue.toFixed(2)}`}
+                />
+              </div>
             </div>
           </div>
 

@@ -46,6 +46,7 @@ export type Sale = {
   invoice_number?: string;
   customer_id: string | null;
   total_amount: number;
+  discount?: number;
   paid_amount: number;
   previous_loan?: number;
   total_due?: number;

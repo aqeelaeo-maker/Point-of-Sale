@@ -159,6 +159,12 @@ export default function Invoice() {
               <span>Current Sale:</span>
               <span>{formatCurrency(sale.total_amount)}</span>
             </div>
+            {(sale.discount || 0) > 0 && (
+              <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
+                <span>Discount:</span>
+                <span>-{formatCurrency(sale.discount || 0)}</span>
+              </div>
+            )}
             {(sale.previous_loan || 0) > 0 && (
               <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
                 <span>Previous Loan:</span>
