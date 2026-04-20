@@ -19,6 +19,8 @@ import SalesHistory from './pages/SalesHistory';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 
+import LoanReceipt from './pages/LoanReceipt';
+
 import { getSettings } from './lib/api';
 
 function Sidebar({ isOpen, setIsOpen, onLogout, storeName, logo, isSuperAdmin }: { isOpen: boolean; setIsOpen: (v: boolean) => void; onLogout: () => void; storeName: string; logo: string; isSuperAdmin: boolean }) {
@@ -188,6 +190,7 @@ export default function App() {
         <Route path="/vendors" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Vendors /></Layout>} />
         <Route path="/settings" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Settings /></Layout>} />
         <Route path="/invoice/:id" element={<Invoice />} />
+        <Route path="/loan-receipt/:customerId" element={<LoanReceipt />} />
         {isSuperAdmin && <Route path="/admin" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Admin /></Layout>} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
