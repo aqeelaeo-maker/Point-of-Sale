@@ -124,8 +124,10 @@ export default function POS() {
   const previousLoan = selectedCustomerData?.loan_balance || 0;
   const totalDue = totalAmount + previousLoan;
 
+  const canCheckout = cart.length > 0 || (selectedCustomer && Number(paidAmountInput) > 0);
+
   const handleCheckout = async () => {
-    if (cart.length === 0) return;
+    if (!canCheckout) return;
 
     const finalPaidAmount = paidAmountInput === '' ? totalDue : Number(paidAmountInput);
 
@@ -361,7 +363,7 @@ export default function POS() {
 
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0}
+            disabled={!canCheckout}
             className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
           >
             <Printer size={20} />

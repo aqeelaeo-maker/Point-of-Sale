@@ -10,7 +10,7 @@ export default function Invoice() {
   const navigate = useNavigate();
   const [sale, setSale] = useState<Sale | null>(null);
   const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '', invoice_header_type: 'name' });
-  const [printMode, setPrintMode] = useState<'thermal80' | 'thermal58' | 'a4'>('thermal58');
+  const [printMode, setPrintMode] = useState<'thermal80' | 'a4'>('thermal80');
   const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
@@ -82,9 +82,8 @@ export default function Invoice() {
           <select 
             className="p-2 border rounded-lg bg-white w-full sm:w-auto"
             value={printMode}
-            onChange={(e) => setPrintMode(e.target.value as 'thermal80' | 'thermal58' | 'a4')}
+            onChange={(e) => setPrintMode(e.target.value as 'thermal80' | 'a4')}
           >
-            <option value="thermal58">Thermal Receipt (58mm)</option>
             <option value="thermal80">Thermal Receipt (80mm)</option>
             <option value="a4">Full Page (A4)</option>
           </select>
@@ -130,26 +129,28 @@ export default function Invoice() {
         </div>
 
         {/* Items Table */}
-        <table className="w-full text-left mb-6">
-          <thead>
-            <tr className={`${printMode.startsWith('thermal') ? 'border-b-2 border-black' : 'border-b border-slate-900'}`}>
-              <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[40%]' : 'font-semibold'}`}>Item</th>
-              <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[15%]' : 'font-semibold'}`}>Qty</th>
-              <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[20%]' : 'font-semibold'}`}>Price</th>
-              <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[25%]' : 'font-semibold'}`}>Total</th>
-            </tr>
-          </thead>
-          <tbody className={`${printMode === 'thermal58' ? 'text-[10px]' : printMode === 'thermal80' ? 'text-xs' : ''}`}>
-            {sale.items.map((item, idx) => (
-              <tr key={idx} className={`${printMode.startsWith('thermal') ? 'border-b border-dashed border-black/30' : 'border-b border-slate-100'}`}>
-                <td className={`py-1.5 pr-1 ${printMode.startsWith('thermal') ? 'font-bold leading-tight w-[40%]' : ''}`}>{item.product_name}</td>
-                <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[15%]' : ''}`}>{item.quantity}</td>
-                <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[20%]' : ''}`}>{printMode.startsWith('thermal') ? item.unit_price.toLocaleString() : formatCurrency(item.unit_price)}</td>
-                <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[25%]' : ''}`}>{printMode.startsWith('thermal') ? item.total_price.toLocaleString() : formatCurrency(item.total_price)}</td>
+        {sale.items && sale.items.length > 0 && (
+          <table className="w-full text-left mb-6">
+            <thead>
+              <tr className={`${printMode.startsWith('thermal') ? 'border-b-2 border-black' : 'border-b border-slate-900'}`}>
+                <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[40%]' : 'font-semibold'}`}>Item</th>
+                <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[15%]' : 'font-semibold'}`}>Qty</th>
+                <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[20%]' : 'font-semibold'}`}>Price</th>
+                <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[25%]' : 'font-semibold'}`}>Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={`${printMode === 'thermal58' ? 'text-[10px]' : printMode === 'thermal80' ? 'text-xs' : ''}`}>
+              {sale.items.map((item, idx) => (
+                <tr key={idx} className={`${printMode.startsWith('thermal') ? 'border-b border-dashed border-black/30' : 'border-b border-slate-100'}`}>
+                  <td className={`py-1.5 pr-1 ${printMode.startsWith('thermal') ? 'font-bold leading-tight w-[40%]' : ''}`}>{item.product_name}</td>
+                  <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[15%]' : ''}`}>{item.quantity}</td>
+                  <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[20%]' : ''}`}>{printMode.startsWith('thermal') ? item.unit_price.toLocaleString() : formatCurrency(item.unit_price)}</td>
+                  <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[25%]' : ''}`}>{printMode.startsWith('thermal') ? item.total_price.toLocaleString() : formatCurrency(item.total_price)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         {/* Totals */}
         <div className="flex justify-end">
@@ -193,6 +194,7 @@ export default function Invoice() {
         <div className={`mt-8 text-center ${printMode === 'thermal58' ? 'text-[8px]' : printMode === 'thermal80' ? 'text-[10px]' : 'text-sm'} ${printMode.startsWith('thermal') ? 'text-black font-bold' : 'text-slate-500'}`}>
           <p>Thank you for your business!</p>
           <p>Please keep this receipt for your records.</p>
+          <p className="mt-2 font-medium">Software Developed By 0332-5059526</p>
         </div>
         
         {/* Invisible element to trigger auto-cut on thermal printers */}
