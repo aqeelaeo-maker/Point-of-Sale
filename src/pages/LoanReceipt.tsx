@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Customer } from '../types';
 import { format } from 'date-fns';
 import { Printer, ArrowLeft } from 'lucide-react';
@@ -8,6 +8,7 @@ import { getCustomers, getSettings } from '../lib/api';
 export default function LoanReceipt() {
   const { customerId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '', invoice_header_type: 'name' });
   const [printMode, setPrintMode] = useState<'thermal80' | 'a4'>('thermal80');
@@ -22,6 +23,13 @@ export default function LoanReceipt() {
         const found = customers.find(c => c.id === customerId);
         if (found) {
           setCustomer(found);
+          // Auto-print if requested
+          const searchParams = new URLSearchParams(location.search);
+          if (searchParams.get('print') === 'true') {
+            setTimeout(() => {
+              window.print();
+            }, 500);
+          }
         }
       } catch (error) {
         console.error(error);

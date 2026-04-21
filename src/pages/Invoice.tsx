@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Sale } from '../types';
 import { format } from 'date-fns';
 import { Printer, ArrowLeft } from 'lucide-react';
@@ -8,6 +8,7 @@ import { getSaleById, getSettings, getCustomers, getProducts } from '../lib/api'
 export default function Invoice() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sale, setSale] = useState<Sale | null>(null);
   const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '', invoice_header_type: 'name' });
   const [printMode, setPrintMode] = useState<'thermal80' | 'a4'>('thermal80');
@@ -40,6 +41,14 @@ export default function Invoice() {
         });
 
         setSale({ ...saleData, items: enrichedItems, customer } as any);
+        
+        // Auto-print if requested
+        const searchParams = new URLSearchParams(location.search);
+        if (searchParams.get('print') === 'true') {
+          setTimeout(() => {
+            window.print();
+          }, 500);
+        }
       } catch (error) {
         console.error(error);
       }

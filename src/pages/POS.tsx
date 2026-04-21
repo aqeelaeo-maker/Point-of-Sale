@@ -137,20 +137,20 @@ export default function POS() {
     const finalPaidAmount = paidAmountInput === '' ? totalDue : Number(paidAmountInput);
 
     const saleData = {
-      customer_id: selectedCustomer,
+      customer_id: selectedCustomer || null,
       total_amount: totalAmount,
       discount: discount,
       paid_amount: finalPaidAmount,
       items: cart.map(item => ({
-        product_id: item.id,
-        product_name: item.name,
-        unit: item.is_sub_unit ? item.sub_unit : item.unit,
-        quantity: item.quantity,
-        cost_price: item.is_sub_unit ? (item.cost_price / (item.conversion_rate || 1)) : item.cost_price,
-        unit_price: item.unit_price,
-        total_price: item.unit_price * item.quantity,
-        is_sub_unit: item.is_sub_unit,
-        stock_deduction: item.is_sub_unit ? (item.quantity / (item.conversion_rate || 1)) : item.quantity
+        product_id: item.id || '',
+        product_name: item.name || 'Unknown',
+        unit: (item.is_sub_unit ? item.sub_unit : item.unit) || 'piece',
+        quantity: item.quantity || 0,
+        cost_price: (item.is_sub_unit ? (item.cost_price / (item.conversion_rate || 1)) : item.cost_price) || 0,
+        unit_price: item.unit_price || 0,
+        total_price: (item.unit_price * item.quantity) || 0,
+        is_sub_unit: item.is_sub_unit || false,
+        stock_deduction: (item.is_sub_unit ? (item.quantity / (item.conversion_rate || 1)) : item.quantity) || 0
       }))
     };
 
@@ -165,11 +165,13 @@ export default function POS() {
       if (data.success) {
         setCart([]);
         setPaidAmountInput('');
+        setDiscountInput('');
         setSelectedCustomer(null);
-        navigate(`/invoice/${data.saleId}`);
+        navigate(`/invoice/${data.saleId}?print=true`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout failed', error);
+      alert(`Checkout failed: ${error.message || error}`);
     }
   };
 
@@ -388,7 +390,7 @@ export default function POS() {
           <div className="flex gap-4">
             {selectedCustomer && (
               <button
-                onClick={() => navigate(`/loan-receipt/${selectedCustomer}`)}
+                onClick={() => navigate(`/loan-receipt/${selectedCustomer}?print=true`)}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
               >
                 <Printer size={20} />
