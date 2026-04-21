@@ -128,10 +128,11 @@ service cloud.firestore {
     }
 
     function isValidSale(data) {
-      return hasOnlyAllowedFields(['invoice_number', 'customer_id', 'total_amount', 'paid_amount', 'previous_loan', 'total_due', 'date']) &&
+      return hasOnlyAllowedFields(['invoice_number', 'customer_id', 'total_amount', 'discount', 'paid_amount', 'previous_loan', 'total_due', 'date']) &&
              (!('invoice_number' in data) || (data.invoice_number is string && data.invoice_number.size() < 100)) &&
              (!('customer_id' in data) || data.customer_id == null || (data.customer_id is string && data.customer_id.size() < 100)) &&
              data.total_amount is number && data.total_amount >= 0 &&
+             (!('discount' in data) || data.discount is number) &&
              data.paid_amount is number && data.paid_amount >= 0 &&
              (!('previous_loan' in data) || data.previous_loan is number) &&
              (!('total_due' in data) || data.total_due is number) &&
