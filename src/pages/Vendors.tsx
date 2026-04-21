@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Vendor } from '../types';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { getVendors, addVendor, getSettings, updateVendor, deleteVendor } from '../lib/api';
 
 export default function Vendors() {
@@ -8,6 +8,7 @@ export default function Vendors() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Vendor>>({ name: '', phone: '', address: '', balance: 0 });
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [currency, setCurrency] = useState('USD');
 
@@ -71,9 +72,14 @@ export default function Vendors() {
     }
   };
 
+  const filteredVendors = vendors.filter(vendor => 
+    (vendor.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (vendor.phone || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Vendors</h1>
         <button
           onClick={() => {
@@ -85,6 +91,17 @@ export default function Vendors() {
         >
           <Plus size={20} /> Add Vendor
         </button>
+      </div>
+
+      <div className="mb-6 relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <input
+          type="text"
+          placeholder="Search vendors..."
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-slate-900"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       {showForm && (
@@ -127,7 +144,7 @@ export default function Vendors() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {vendors.map(vendor => (
+            {filteredVendors.map(vendor => (
               <tr key={vendor.id} className="hover:bg-slate-50 transition-colors">
                 <td className="p-4 font-medium text-slate-900">{vendor.name}</td>
                 <td className="p-4 text-slate-500">{vendor.phone || '-'}</td>
@@ -139,7 +156,7 @@ export default function Vendors() {
                 </td>
               </tr>
             ))}
-            {vendors.length === 0 && (
+            {filteredVendors.length === 0 && (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-slate-500">No vendors found.</td>
               </tr>
