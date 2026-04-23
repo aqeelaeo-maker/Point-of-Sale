@@ -388,20 +388,10 @@ export default function POS() {
           </div>
 
           <div className="flex gap-4">
-            {selectedCustomer && (
-              <button
-                onClick={() => navigate(`/loan-receipt/${selectedCustomer}?print=true`)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
-              >
-                <Printer size={20} />
-                Print Loan Statement
-              </button>
-            )}
-
             <button
               onClick={handleCheckout}
               disabled={!canCheckout}
-              className="flex-[2] bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
             >
               <Printer size={20} />
               {editSaleId ? 'Update & Print' : 'Checkout & Print'}

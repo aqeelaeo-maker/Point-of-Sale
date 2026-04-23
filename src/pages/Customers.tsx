@@ -161,6 +161,11 @@ export default function Customers() {
                 <td className="p-4 text-slate-500">{customer.address || '-'}</td>
                 <td className="p-4 text-right font-medium text-red-600">{formatCurrency(customer.loan_balance)}</td>
                 <td className="p-4 text-right">
+                  {customer.loan_balance > 0 && (
+                    <button onClick={() => navigate(`/loan-receipt/${customer.id}?print=true`)} className="text-emerald-600 hover:text-emerald-800 mr-3 text-sm font-medium" title="Print Loan Statement">
+                      <Printer size={16} className="inline mr-1" />Print Statement
+                    </button>
+                  )}
                   <button onClick={() => handleEdit(customer)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Edit</button>
                   <button onClick={() => handleDelete(customer.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
                 </td>
