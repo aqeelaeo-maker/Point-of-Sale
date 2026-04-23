@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { TrendingUp, Users, Truck, DollarSign, AlertTriangle, Clock, X } from 'lucide-react';
+import { TrendingUp, Users, Truck, DollarSign, AlertTriangle, Clock, X, Lock } from 'lucide-react';
 import { getAnalytics, getSettings, getProducts } from '../lib/api';
 import { Product } from '../types';
 
@@ -11,6 +11,12 @@ export default function Dashboard() {
   const [lowStockLimits, setLowStockLimits] = useState<Record<string, number>>({});
   const [showLowStockModal, setShowLowStockModal] = useState(false);
   const [showExpiringModal, setShowExpiringModal] = useState(false);
+  
+  const [pinRequired, setPinRequired] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState(false);
+  const [actualPin, setActualPin] = useState('');
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
     getAnalytics()
@@ -19,6 +25,13 @@ export default function Dashboard() {
       
     getSettings()
       .then(settings => {
+        if (settings.dashboard_pin && settings.dashboard_pin.length === 4) {
+          setPinRequired(true);
+          setActualPin(settings.dashboard_pin);
+        } else {
+          setIsUnlocked(true);
+        }
+        
         if (settings.currency) setCurrency(settings.currency);
         if (settings.low_stock_limits) {
           try {
@@ -39,7 +52,55 @@ export default function Dashboard() {
       .catch(console.error);
   }, []);
 
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinInput === actualPin) {
+      setIsUnlocked(true);
+      setPinError(false);
+    } else {
+      setPinError(true);
+      setPinInput('');
+    }
+  };
+
   if (!data) return <div className="p-8">Loading dashboard...</div>;
+
+  if (pinRequired && !isUnlocked) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-sm w-full text-center">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Dashboard Locked</h2>
+          <p className="text-slate-500 mb-6">Enter your 4-digit PIN to access the dashboard.</p>
+          
+          <form onSubmit={handlePinSubmit}>
+            <input
+              type="password"
+              maxLength={4}
+              pattern="\d{4}"
+              autoFocus
+              className="w-full text-center tracking-widest text-3xl p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none mb-4"
+              value={pinInput}
+              onChange={e => {
+                setPinInput(e.target.value.replace(/\D/g, ''));
+                setPinError(false);
+              }}
+            />
+            {pinError && <p className="text-red-500 text-sm font-medium mb-4">Incorrect PIN. Try again.</p>}
+            <button
+              type="submit"
+              disabled={pinInput.length !== 4}
+              className="w-full bg-emerald-600 text-white py-3 rounded-xl hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50"
+            >
+              Unlock Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);

@@ -20,6 +20,7 @@ import Login from './pages/Login';
 import Admin from './pages/Admin';
 
 import LoanReceipt from './pages/LoanReceipt';
+import PendingLoansPrint from './pages/PendingLoansPrint';
 
 import { getSettings } from './lib/api';
 
@@ -191,6 +192,7 @@ export default function App() {
         <Route path="/settings" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Settings /></Layout>} />
         <Route path="/invoice/:id" element={<Invoice />} />
         <Route path="/loan-receipt/:customerId" element={<LoanReceipt />} />
+        <Route path="/print-pending-loans" element={<PendingLoansPrint />} />
         {isSuperAdmin && <Route path="/admin" element={<Layout onLogout={handleLogout} isSuperAdmin={isSuperAdmin}><Admin /></Layout>} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -11,7 +11,8 @@ export default function Settings() {
     currency: 'USD',
     language: 'en',
     units: 'piece, kg, liter',
-    invoice_header_type: 'name'
+    invoice_header_type: 'name',
+    dashboard_pin: ''
   });
   const [lowStockLimits, setLowStockLimits] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
@@ -28,7 +29,8 @@ export default function Settings() {
           currency: data.currency || 'USD',
           language: data.language || 'en',
           units: data.units || 'piece, kg, liter',
-          invoice_header_type: data.invoice_header_type || 'name'
+          invoice_header_type: data.invoice_header_type || 'name',
+          dashboard_pin: data.dashboard_pin || ''
         });
         
         if (data.low_stock_limits) {
@@ -221,6 +223,18 @@ export default function Settings() {
                 <option value="hi">हिन्दी</option>
                 <option value="zh">中文</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Dashboard PIN Options</label>
+              <input 
+                type="text" 
+                maxLength={4}
+                pattern="\d{4}"
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
+                value={settings.dashboard_pin} 
+                onChange={e => setSettings({...settings, dashboard_pin: e.target.value.replace(/\D/g, '')})} 
+                placeholder="Leave blank to disable (4 digits)"
+              />
             </div>
           </div>
 

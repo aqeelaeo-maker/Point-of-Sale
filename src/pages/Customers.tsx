@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Customer } from '../types';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Printer } from 'lucide-react';
 import { getCustomers, addCustomer, getSettings, updateCustomer, deleteCustomer } from '../lib/api';
 
 export default function Customers() {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,16 +83,24 @@ export default function Customers() {
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Customers</h1>
-        <button
-          onClick={() => {
-            setEditingId(null);
-            setFormData({ name: '', phone: '', address: '', loan_balance: 0 });
-            setShowForm(!showForm);
-          }}
-          className="w-full sm:w-auto bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
-        >
-          <Plus size={20} /> Add Customer
-        </button>
+        <div className="flex w-full sm:w-auto gap-3 flex-col sm:flex-row">
+          <button
+            onClick={() => navigate('/print-pending-loans')}
+            className="w-full sm:w-auto bg-slate-800 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-700 transition-colors"
+          >
+            <Printer size={20} /> Print Pending Loans
+          </button>
+          <button
+            onClick={() => {
+              setEditingId(null);
+              setFormData({ name: '', phone: '', address: '', loan_balance: 0 });
+              setShowForm(!showForm);
+            }}
+            className="w-full sm:w-auto bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
+          >
+            <Plus size={20} /> Add Customer
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 relative max-w-md">
