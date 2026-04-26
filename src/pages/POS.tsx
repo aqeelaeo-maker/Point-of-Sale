@@ -134,7 +134,9 @@ export default function POS() {
   const handleCheckout = async () => {
     if (!canCheckout) return;
 
-    const finalPaidAmount = paidAmountInput === '' ? totalDue : Number(paidAmountInput);
+    const finalPaidAmount = paidAmountInput === '' 
+      ? (selectedCustomer ? 0 : totalDue) 
+      : Number(paidAmountInput);
 
     const saleData = {
       customer_id: selectedCustomer || null,
@@ -381,7 +383,7 @@ export default function POS() {
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
                   value={paidAmountInput}
                   onChange={e => setPaidAmountInput(e.target.value)}
-                  placeholder={`Exact amount: ${totalDue.toFixed(2)}`}
+                  placeholder={selectedCustomer ? '0.00' : `Exact amount: ${totalDue.toFixed(2)}`}
                 />
               </div>
             </div>
