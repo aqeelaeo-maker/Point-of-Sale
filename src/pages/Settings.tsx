@@ -225,12 +225,12 @@ export default function Settings() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Dashboard PIN Options</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Dashboard PIN</label>
               <input 
-                type="text" 
+                type="password" 
                 maxLength={4}
                 pattern="\d{4}"
-                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all tracking-widest font-mono" 
                 value={settings.dashboard_pin} 
                 onChange={e => setSettings({...settings, dashboard_pin: e.target.value.replace(/\D/g, '')})} 
                 placeholder="Leave blank to disable (4 digits)"
