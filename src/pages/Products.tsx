@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Product } from '../types';
-import { Plus, Upload } from 'lucide-react';
+import { Plus, Upload, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { getProducts, addProduct, addProductsBulk, getSettings, updateProduct, deleteProduct } from '../lib/api';
 
@@ -51,6 +51,19 @@ export default function Products() {
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
+  };
+
+  const handleExportExcel = () => {
+    // Export raw data so it can potentially be re-imported 
+    const dataToExport = products.map((product) => {
+      const { id, ...rest } = product as any;
+      return rest;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(wb, "products_data.xlsx");
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +161,12 @@ export default function Products() {
             ref={fileInputRef}
             onChange={handleFileUpload}
           />
+          <button
+            onClick={handleExportExcel}
+            className="w-full sm:w-auto bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+          >
+            <Download size={20} /> Export Excel
+          </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="w-full sm:w-auto bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
