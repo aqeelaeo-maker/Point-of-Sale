@@ -5,6 +5,7 @@ import { cn } from './lib/utils';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { checkEmailAllowed } from './lib/api';
 
 // Pages
 import POS from './pages/POS';
@@ -145,7 +146,15 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+      if (firebaseUser && firebaseUser.email) {
+        const { status } = await checkEmailAllowed(firebaseUser.email);
+        if (status !== 'allowed') {
+          await signOut(auth);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         const userRef = doc(db, 'users', firebaseUser.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {

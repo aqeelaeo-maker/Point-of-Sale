@@ -21,10 +21,14 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       
       if (!user.email) throw new Error('No email found in Google account.');
 
-      const isAllowed = await checkEmailAllowed(user.email);
-      if (!isAllowed) {
+      const { status } = await checkEmailAllowed(user.email);
+      if (status === 'not_allowed') {
         await signOut(auth);
         setShowContactAdmin(true);
+        return;
+      } else if (status === 'needs_approval') {
+        await signOut(auth);
+        setError('Your store access is paused for this month. Please wait for Super Admin approval or contact support.');
         return;
       }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Plus, Trash2, AlertCircle, X } from 'lucide-react';
-import { getAllowedEmails, addAllowedEmail, removeAllowedEmail } from '../lib/api';
+import { Shield, Plus, Trash2, AlertCircle, X, CheckCircle } from 'lucide-react';
+import { getAllowedEmails, addAllowedEmail, removeAllowedEmail, approveStore } from '../lib/api';
 
 export default function Admin() {
   const [emails, setEmails] = useState<any[]>([]);
@@ -35,6 +35,16 @@ export default function Admin() {
     } catch (err) {
       console.error(err);
       setError('Failed to add email');
+    }
+  };
+
+  const handleApprove = async (email: string) => {
+    try {
+      await approveStore(email);
+      fetchEmails();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to approve store');
     }
   };
 
@@ -101,18 +111,38 @@ export default function Admin() {
             <span className="font-medium text-slate-900">aqeelaeo@gmail.com</span>
             <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md">SUPER ADMIN</span>
           </div>
-          {emails.map(item => (
-            <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-              <span className="font-medium text-slate-700">{item.email}</span>
-              <button
-                onClick={() => setEmailToRemove(item.id)}
-                className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                title="Remove access"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
-          ))}
+          {emails.map(item => {
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            const isApproved = item.approvedForMonth === currentMonth;
+
+            return (
+              <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div className="flex flex-col">
+                  <span className="font-medium text-slate-700">{item.email}</span>
+                  <span className={`text-xs mt-1 ${isApproved ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {isApproved ? 'Approved for current month' : 'Requires approval'}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {!isApproved && (
+                    <button
+                      onClick={() => handleApprove(item.id)}
+                      className="text-emerald-600 hover:bg-emerald-50 px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                    >
+                      <CheckCircle size={16} /> Approve
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setEmailToRemove(item.id)}
+                    className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                    title="Remove access"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
           {emails.length === 0 && (
             <div className="p-8 text-center text-slate-500">
               No additional emails allowed yet.

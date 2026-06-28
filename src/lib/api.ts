@@ -27,10 +27,26 @@ export const removeAllowedEmail = async (email: string) => {
   return { success: true };
 };
 
+export const approveStore = async (email: string) => {
+  const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+  await setDoc(doc(db, 'allowed_emails', email), { approvedForMonth: currentMonth }, { merge: true });
+  return { success: true };
+};
+
 export const checkEmailAllowed = async (email: string) => {
-  if (email === 'aqeelaeo@gmail.com') return true;
+  if (email === 'aqeelaeo@gmail.com') return { status: 'allowed' };
+  
   const docRef = await getDoc(doc(db, 'allowed_emails', email));
-  return docRef.exists();
+  if (!docRef.exists()) return { status: 'not_allowed' };
+  
+  const data = docRef.data();
+  const currentMonth = new Date().toISOString().substring(0, 7);
+  
+  if (data.approvedForMonth !== currentMonth) {
+    return { status: 'needs_approval' };
+  }
+  
+  return { status: 'allowed' };
 };
 
 // --- Products ---
