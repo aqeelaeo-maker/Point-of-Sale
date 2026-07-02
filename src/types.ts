@@ -1,6 +1,7 @@
 export type Product = {
   id: string;
   name: string;
+  name_urdu?: string;
   barcode: string;
   unit: string;
   cost_price: number;
@@ -16,6 +17,7 @@ export type Product = {
 export type Customer = {
   id: string;
   name: string;
+  name_urdu?: string;
   phone: string;
   address?: string;
   loan_balance: number;
@@ -24,6 +26,7 @@ export type Customer = {
 export type Vendor = {
   id: string;
   name: string;
+  name_urdu?: string;
   phone: string;
   address?: string;
   balance: number;

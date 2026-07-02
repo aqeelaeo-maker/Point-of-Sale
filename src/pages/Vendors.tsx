@@ -7,7 +7,7 @@ export default function Vendors() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<Vendor>>({ name: '', phone: '', address: '', balance: 0 });
+  const [formData, setFormData] = useState<Partial<Vendor>>({ name: '', name_urdu: '', phone: '', address: '', balance: 0 });
   const [searchTerm, setSearchTerm] = useState('');
 
   const [currency, setCurrency] = useState('USD');
@@ -51,7 +51,7 @@ export default function Vendors() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', phone: '', address: '', balance: 0 });
+      setFormData({ name: '', name_urdu: '', phone: '', address: '', balance: 0 });
       fetchVendors();
     } catch (error) {
       console.error("Error saving vendor:", error);
@@ -84,7 +84,7 @@ export default function Vendors() {
         <button
           onClick={() => {
             setEditingId(null);
-            setFormData({ name: '', phone: '', address: '', balance: 0 });
+            setFormData({ name: '', name_urdu: '', phone: '', address: '', balance: 0 });
             setShowForm(!showForm);
           }}
           className="w-full sm:w-auto bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
@@ -111,6 +111,10 @@ export default function Vendors() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
               <input required type="text" className="w-full p-2 border rounded-lg" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Name (Urdu)</label>
+              <input type="text" dir="rtl" className="w-full p-2 border rounded-lg" value={formData.name_urdu || ''} onChange={e => setFormData({...formData, name_urdu: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>

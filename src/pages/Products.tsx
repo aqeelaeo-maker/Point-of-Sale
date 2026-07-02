@@ -9,7 +9,7 @@ export default function Products() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>({
-    name: '', barcode: '', unit: 'piece', has_sub_unit: false, sub_unit: '', conversion_rate: 1, cost_price: 0, price_per_unit: 0, stock: 0
+    name: '', name_urdu: '', barcode: '', unit: 'piece', has_sub_unit: false, sub_unit: '', conversion_rate: 1, cost_price: 0, price_per_unit: 0, stock: 0
   });
 
   const [search, setSearch] = useState('');
@@ -121,7 +121,7 @@ export default function Products() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', barcode: '', unit: availableUnits[0] || 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1 });
+      setFormData({ name: '', name_urdu: '', barcode: '', unit: availableUnits[0] || 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1 });
       fetchProducts();
     } catch (error) {
       console.error("Error saving product:", error);
@@ -176,7 +176,7 @@ export default function Products() {
           <button
             onClick={() => {
               setEditingId(null);
-              setFormData({ name: '', barcode: '', unit: availableUnits[0] || 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1 });
+              setFormData({ name: '', name_urdu: '', barcode: '', unit: availableUnits[0] || 'piece', cost_price: 0, price_per_unit: 0, stock: 0, batch_number: '', expiry_date: '', has_sub_unit: false, sub_unit: '', conversion_rate: 1 });
               setShowForm(!showForm);
             }}
             className="w-full sm:w-auto bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
@@ -193,6 +193,10 @@ export default function Products() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
               <input required type="text" className="w-full p-2 border rounded-lg" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Name (Urdu)</label>
+              <input type="text" dir="rtl" className="w-full p-2 border rounded-lg" value={formData.name_urdu || ''} onChange={e => setFormData({...formData, name_urdu: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Barcode</label>

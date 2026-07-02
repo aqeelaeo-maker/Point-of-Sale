@@ -9,7 +9,7 @@ export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<Customer>>({ name: '', phone: '', address: '', loan_balance: 0 });
+  const [formData, setFormData] = useState<Partial<Customer>>({ name: '', name_urdu: '', phone: '', address: '', loan_balance: 0 });
   const [searchTerm, setSearchTerm] = useState('');
 
   const [currency, setCurrency] = useState('USD');
@@ -53,7 +53,7 @@ export default function Customers() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', phone: '', address: '', loan_balance: 0 });
+      setFormData({ name: '', name_urdu: '', phone: '', address: '', loan_balance: 0 });
       fetchCustomers();
     } catch (error) {
       console.error("Error saving customer:", error);
@@ -93,7 +93,7 @@ export default function Customers() {
           <button
             onClick={() => {
               setEditingId(null);
-              setFormData({ name: '', phone: '', address: '', loan_balance: 0 });
+              setFormData({ name: '', name_urdu: '', phone: '', address: '', loan_balance: 0 });
               setShowForm(!showForm);
             }}
             className="w-full sm:w-auto bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
@@ -121,6 +121,10 @@ export default function Customers() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
               <input required type="text" className="w-full p-2 border rounded-lg" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Name (Urdu)</label>
+              <input type="text" dir="rtl" className="w-full p-2 border rounded-lg" value={formData.name_urdu || ''} onChange={e => setFormData({...formData, name_urdu: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>

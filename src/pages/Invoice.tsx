@@ -12,6 +12,7 @@ export default function Invoice() {
   const [sale, setSale] = useState<Sale | null>(null);
   const [settings, setSettings] = useState({ store_name: 'GROCERY STORE', store_address: '', store_phone: '', store_logo: '', invoice_header_type: 'name' });
   const [printMode, setPrintMode] = useState<'thermal80' | 'a4'>('thermal80');
+  const [language, setLanguage] = useState<'en' | 'ur'>('en');
   const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
@@ -27,17 +28,20 @@ export default function Invoice() {
         
         const customer = customers.find(c => c.id === saleData.customer_id);
         
-        // Fallback for older sales that didn't store product_name and unit
         const enrichedItems = saleData.items.map((item: any) => {
+          const product: any = products.find(p => (p as any).id === item.product_id);
           if (!item.product_name || !item.unit) {
-            const product = products.find(p => p.id === item.product_id);
             return {
               ...item,
               product_name: item.product_name || (product ? product.name : 'Unknown Product'),
+              product_name_urdu: product ? product.name_urdu : '',
               unit: item.unit || (product ? product.unit : '')
             };
           }
-          return item;
+          return {
+            ...item,
+            product_name_urdu: product ? product.name_urdu : ''
+          };
         });
 
         setSale({ ...saleData, items: enrichedItems, customer } as any);
@@ -90,6 +94,14 @@ export default function Invoice() {
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <select 
             className="p-2 border rounded-lg bg-white w-full sm:w-auto"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'ur')}
+          >
+            <option value="en">English</option>
+            <option value="ur">Urdu (اردو)</option>
+          </select>
+          <select 
+            className="p-2 border rounded-lg bg-white w-full sm:w-auto"
             value={printMode}
             onChange={(e) => setPrintMode(e.target.value as 'thermal80' | 'a4')}
           >
@@ -126,35 +138,37 @@ export default function Invoice() {
         </div>
 
         {/* Invoice Info */}
-        <div className={`flex justify-between pb-3 ${printMode === 'a4' ? 'mb-8 border-b border-slate-200' : 'mb-3 text-[10px] sm:text-xs border-b-2 border-dashed border-black'}`}>
+        <div className={`flex justify-between pb-3 ${printMode === 'a4' ? 'mb-8 border-b border-slate-200' : 'mb-3 text-[10px] sm:text-xs border-b-2 border-dashed border-black'}`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
           <div>
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Inv No:</span> #{sale.invoice_number || sale.id?.toString().padStart(6, '0')}</p>
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Date:</span> {sale.date ? format(new Date(sale.date), printMode === 'thermal58' ? 'dd/MM/yy HH:mm' : 'PP p') : ''}</p>
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>{language === 'ur' ? 'بل نمبر:' : 'Inv No:'}</span> #{sale.invoice_number || sale.id?.toString().padStart(6, '0')}</p>
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>{language === 'ur' ? 'تاریخ:' : 'Date:'}</span> {sale.date ? format(new Date(sale.date), printMode === 'thermal58' ? 'dd/MM/yy HH:mm' : 'PP p') : ''}</p>
           </div>
-          <div className="text-right">
-            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>Cust:</span> {sale.customer?.name || 'Walk-in'}</p>
+          <div className={language === 'ur' ? 'text-left' : 'text-right'}>
+            <p><span className={`${printMode === 'a4' ? 'font-semibold' : 'font-black'}`}>{language === 'ur' ? 'گاہک:' : 'Cust:'}</span> {sale.customer ? (language === 'ur' && sale.customer.name_urdu ? sale.customer.name_urdu : sale.customer.name) : (language === 'ur' ? 'نقد' : 'Walk-in')}</p>
             {sale.customer && <p className={`${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-500'}`}>{sale.customer.phone}</p>}
           </div>
         </div>
 
         {/* Items Table */}
         {sale.items && sale.items.length > 0 && (
-          <table className="w-full text-left mb-6">
+          <table className="w-full text-left mb-6" dir={language === 'ur' ? 'rtl' : 'ltr'}>
             <thead>
               <tr className={`${printMode.startsWith('thermal') ? 'border-b-2 border-black' : 'border-b border-slate-900'}`}>
-                <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[40%]' : 'font-semibold'}`}>Item</th>
-                <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[15%]' : 'font-semibold'}`}>Qty</th>
-                <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[20%]' : 'font-semibold'}`}>Price</th>
-                <th className={`py-1.5 text-right ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[25%]' : 'font-semibold'}`}>Total</th>
+                <th className={`py-1.5 ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[40%]' : 'font-semibold'}`}>{language === 'ur' ? 'آئٹم' : 'Item'}</th>
+                <th className={`py-1.5 ${language === 'ur' ? 'text-left' : 'text-right'} ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[15%]' : 'font-semibold'}`}>{language === 'ur' ? 'مقدار' : 'Qty'}</th>
+                <th className={`py-1.5 ${language === 'ur' ? 'text-left' : 'text-right'} ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[20%]' : 'font-semibold'}`}>{language === 'ur' ? 'قیمت' : 'Price'}</th>
+                <th className={`py-1.5 ${language === 'ur' ? 'text-left' : 'text-right'} ${printMode.startsWith('thermal') ? 'font-black uppercase tracking-wider w-[25%]' : 'font-semibold'}`}>{language === 'ur' ? 'کل رقم' : 'Total'}</th>
               </tr>
             </thead>
             <tbody className={`${printMode === 'thermal58' ? 'text-[10px]' : printMode === 'thermal80' ? 'text-xs' : ''}`}>
               {sale.items.map((item, idx) => (
                 <tr key={idx} className={`${printMode.startsWith('thermal') ? 'border-b border-dashed border-black/30' : 'border-b border-slate-100'}`}>
-                  <td className={`py-1.5 pr-1 ${printMode.startsWith('thermal') ? 'font-bold leading-tight w-[40%]' : ''}`}>{item.product_name}</td>
-                  <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[15%]' : ''}`}>{item.quantity}</td>
-                  <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[20%]' : ''}`}>{printMode.startsWith('thermal') ? item.unit_price.toLocaleString() : formatCurrency(item.unit_price)}</td>
-                  <td className={`py-1.5 text-right whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[25%]' : ''}`}>{printMode.startsWith('thermal') ? item.total_price.toLocaleString() : formatCurrency(item.total_price)}</td>
+                  <td className={`py-1.5 ${language === 'ur' ? 'pl-1' : 'pr-1'} ${printMode.startsWith('thermal') ? 'font-bold leading-tight w-[40%]' : ''}`}>
+                    {language === 'ur' && (item as any).product_name_urdu ? (item as any).product_name_urdu : item.product_name}
+                  </td>
+                  <td className={`py-1.5 ${language === 'ur' ? 'text-left' : 'text-right'} whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[15%]' : ''}`}>{item.quantity}</td>
+                  <td className={`py-1.5 ${language === 'ur' ? 'text-left' : 'text-right'} whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[20%]' : ''}`}>{printMode.startsWith('thermal') ? item.unit_price.toLocaleString() : formatCurrency(item.unit_price)}</td>
+                  <td className={`py-1.5 ${language === 'ur' ? 'text-left' : 'text-right'} whitespace-nowrap ${printMode.startsWith('thermal') ? 'w-[25%]' : ''}`}>{printMode.startsWith('thermal') ? item.total_price.toLocaleString() : formatCurrency(item.total_price)}</td>
                 </tr>
               ))}
             </tbody>
@@ -162,43 +176,43 @@ export default function Invoice() {
         )}
 
         {/* Totals */}
-        <div className="flex justify-end">
+        <div className={`flex ${language === 'ur' ? 'justify-start' : 'justify-end'}`} dir={language === 'ur' ? 'rtl' : 'ltr'}>
           <div className={`${printMode === 'a4' ? 'w-1/2' : 'w-full'}`}>
             <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
-              <span>Current Sale:</span>
+              <span>{language === 'ur' ? 'موجودہ بل:' : 'Current Sale:'}</span>
               <span>{formatCurrency(sale.total_amount)}</span>
             </div>
             {(sale.discount || 0) > 0 && (
               <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
-                <span>Discount:</span>
+                <span>{language === 'ur' ? 'رعایت:' : 'Discount:'}</span>
                 <span>-{formatCurrency(sale.discount || 0)}</span>
               </div>
             )}
             {(sale.previous_loan || 0) > 0 && (
               <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
-                <span>Previous Loan:</span>
+                <span>{language === 'ur' ? 'پچھلا بقایا:' : 'Previous Loan:'}</span>
                 <span>{formatCurrency(sale.previous_loan || 0)}</span>
               </div>
             )}
             <div className={`flex justify-between py-1.5 ${printMode === 'thermal58' ? 'text-base' : 'text-xl'} font-black ${printMode.startsWith('thermal') ? 'border-t-2 border-black' : 'border-t border-slate-900'}`}>
-              <span>Total Due:</span>
+              <span>{language === 'ur' ? 'کل واجب الادا:' : 'Total Due:'}</span>
               <span>{formatCurrency(sale.total_due ?? sale.total_amount)}</span>
             </div>
             <div className={`flex justify-between py-1.5 ${printMode.startsWith('thermal') ? 'text-black' : 'text-slate-600'}`}>
-              <span>Paid Amount:</span>
+              <span>{language === 'ur' ? 'وصول شدہ رقم:' : 'Paid Amount:'}</span>
               <span>{formatCurrency(sale.paid_amount)}</span>
             </div>
             
             {sale.paid_amount > (sale.total_due ?? sale.total_amount) && (
               <div className={`flex justify-between py-1.5 font-black ${printMode.startsWith('thermal') ? 'text-black' : 'text-emerald-600 font-semibold'}`}>
-                <span>Change:</span>
+                <span>{language === 'ur' ? 'بقیہ رقم (تبدیلی):' : 'Change:'}</span>
                 <span>{formatCurrency(sale.paid_amount - (sale.total_due ?? sale.total_amount))}</span>
               </div>
             )}
             
             {(sale.total_due ?? sale.total_amount) > sale.paid_amount && (
               <div className={`flex justify-between py-1.5 font-black mt-1 ${printMode.startsWith('thermal') ? 'text-black border-t-2 border-dashed border-black' : 'text-red-600 font-semibold border-t border-slate-200'}`}>
-                <span>Remaining Loan:</span>
+                <span>{language === 'ur' ? 'بقایا قرض:' : 'Remaining Loan:'}</span>
                 <span>{formatCurrency((sale.total_due ?? sale.total_amount) - sale.paid_amount)}</span>
               </div>
             )}
@@ -207,8 +221,8 @@ export default function Invoice() {
 
         {/* Footer */}
         <div className={`mt-8 text-center ${printMode === 'thermal58' ? 'text-[8px]' : printMode === 'thermal80' ? 'text-[10px]' : 'text-sm'} ${printMode.startsWith('thermal') ? 'text-black font-bold' : 'text-slate-500'}`}>
-          <p>Thank you for your business!</p>
-          <p>Please keep this receipt for your records.</p>
+          <p>{language === 'ur' ? 'خریداری کا شکریہ!' : 'Thank you for your business!'}</p>
+          <p>{language === 'ur' ? 'براہ کرم یہ رسید اپنے ریکارڈ کے لیے محفوظ رکھیں۔' : 'Please keep this receipt for your records.'}</p>
           <p className="mt-2 font-medium">Software Developed By 0332-5059526</p>
         </div>
         
