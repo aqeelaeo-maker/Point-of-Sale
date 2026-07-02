@@ -97,8 +97,9 @@ service cloud.firestore {
     }
 
     function isValidProduct(data) {
-      return hasOnlyAllowedFields(['name', 'barcode', 'unit', 'cost_price', 'price_per_unit', 'stock', 'batch_number', 'expiry_date', 'has_sub_unit', 'sub_unit', 'conversion_rate']) &&
+      return hasOnlyAllowedFields(['name', 'name_urdu', 'barcode', 'unit', 'cost_price', 'price_per_unit', 'stock', 'batch_number', 'expiry_date', 'has_sub_unit', 'sub_unit', 'conversion_rate']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             (!('name_urdu' in data) || (data.name_urdu is string && data.name_urdu.size() < 200)) &&
              data.unit is string && data.unit.size() > 0 && data.unit.size() < 50 &&
              data.cost_price is number && data.cost_price >= 0 &&
              data.price_per_unit is number && data.price_per_unit >= 0 &&
@@ -112,16 +113,18 @@ service cloud.firestore {
     }
 
     function isValidCustomer(data) {
-      return hasOnlyAllowedFields(['name', 'phone', 'address', 'loan_balance']) &&
+      return hasOnlyAllowedFields(['name', 'name_urdu', 'phone', 'address', 'loan_balance']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             (!('name_urdu' in data) || (data.name_urdu is string && data.name_urdu.size() < 200)) &&
              (!('phone' in data) || (data.phone is string && data.phone.size() < 50)) &&
              (!('address' in data) || (data.address is string && data.address.size() < 500)) &&
              data.loan_balance is number;
     }
 
     function isValidVendor(data) {
-      return hasOnlyAllowedFields(['name', 'phone', 'address', 'balance']) &&
+      return hasOnlyAllowedFields(['name', 'name_urdu', 'phone', 'address', 'balance']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             (!('name_urdu' in data) || (data.name_urdu is string && data.name_urdu.size() < 200)) &&
              (!('phone' in data) || (data.phone is string && data.phone.size() < 50)) &&
              (!('address' in data) || (data.address is string && data.address.size() < 500)) &&
              data.balance is number;
